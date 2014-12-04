@@ -1,7 +1,22 @@
-# Abstract LevelDOWN [![Build Status](https://secure.travis-ci.org/rvagg/abstract-leveldown.png)](http://travis-ci.org/rvagg/abstract-leveldown)
+# Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png)](http://travis-ci.org/snowyu/node-abstract-nosql)
 
-[![NPM](https://nodei.co/npm/abstract-leveldown.png?downloads=true&downloadRank=true)](https://nodei.co/npm/abstract-leveldown/)
-[![NPM](https://nodei.co/npm-dl/abstract-leveldown.png?months=6&height=3)](https://nodei.co/npm/abstract-leveldown/)
+[![NPM](https://nodei.co/npm/abstract-nosql.png?downloads=true&downloadRank=true)](https://nodei.co/npm/abstract-nosql/)
+[![NPM](https://nodei.co/npm-dl/abstract-nosql.png?months=6&height=3)](https://nodei.co/npm/abstract-nosql/)
+
+
+Abstract-nosql package is modified from abstract-leveldown to enhance the synchronous methods supports for development a node nosql database quickly and using easily.
+
+abstract-nosql Interface is neutral. There is no bias neither synchronous bias nor asynchronous bias. So that more people choose according to their own manner. For myself, I am not very concerned about the performance of javascript, I am more concerned about the efficiency of its development, as well as through functional programming (functions, closures such a simple concept) extend out of the rich and wonderful world. I still can not help but to think about performance issues. Asynchronous itself produces a small gap, because javascript reason this gap is magnified.
+
+just saying that the asynchronous and synchronous consideration, if a function is only 1% of the opportunity to visit the IO, most of the time (99%) are in memory access. I want to different considerations, have different choices. And this decision is unlikely that done by the interface instead.
+
+Synchronous operation converts into asynchronous operation is easy, and almost no performance loss, in turn, may not. Conversion are many ways, setImmediate is not the best, but it is the simplest one.
+ES6 generator or [node-fibers](https://github.com/laverdet/node-fibers) could be a better way. the coroutine/fiber is lighter and more efficient than thread.
+
+The setImmediate package could be extended to use different implementation(setImmediate, nextTick, ES6 generator, node-fiber) in different environment.
+So the simulated asynchronous uses this way, if you do not implement the asynchronous methods.
+
+## About LevelDOWN
 
 An abstract prototype matching the **[LevelDOWN](https://github.com/rvagg/node-leveldown/)** API. Useful for extending **[LevelUP](https://github.com/rvagg/node-levelup)** functionality by providing a replacement to LevelDOWN.
 
@@ -16,10 +31,10 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes
 
-Add the sync methods support now. You can implement the sync methods only.
-The async methods will be simulated via these sync methods. if you wanna
-support the async only, just do not implement these sync methods.
-but if you wanna support the sync only, you should override the async methods to disable it.
+Add the synchronous methods support now. You can implement the synchronous methods only.
+The asynchronous methods will be simulated via these synchronous methods. If you wanna
+support the asynchronous methods only, just do not implement these synchronous methods.
+But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 
 ## Example
 
@@ -90,7 +105,7 @@ db.put('foo', 'bar')
 console.log(db.get('foo'))
 ```
 
-use async methods(no sync supports now):
+use async methods(no sync supports):
 
 
 ```js
