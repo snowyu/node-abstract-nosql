@@ -31,10 +31,13 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes
 
-Add the synchronous methods support now. You can implement the synchronous methods only.
-The asynchronous methods will be simulated via these synchronous methods. If you wanna
-support the asynchronous methods only, just do not implement these synchronous methods.
-But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
+
+* DB constructor allows no location.
++ Add synchronous methods supports.
+  * Add the synchronous methods support now. You can implement the synchronous methods only.
+  * The asynchronous methods will be simulated via these synchronous methods. If you wanna
+  * support the asynchronous methods only, just do not implement these synchronous methods.
+  * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 
 ## Example
 
@@ -176,6 +179,17 @@ See [MemDOWN](https://github.com/rvagg/memdown/) if you are looking for a comple
 Remember that each of these methods, if you implement them, will receive exactly the number and order of arguments described. Optional arguments will be converted to sensible defaults.
 
 ### AbstractLevelDOWN(location)
+
+## Sync Methods
+
+### AbstractLevelDOWN#_openSync(options)
+### AbstractLevelDOWN#_getSync(key, options)
+### AbstractLevelDOWN#_putSync(key, value, options)
+### AbstractLevelDOWN#_delSync(key, options)
+### AbstractLevelDOWN#_batchSync(array, options)
+
+## Async Methods
+
 ### AbstractLevelDOWN#_open(options, callback)
 ### AbstractLevelDOWN#_close(callback)
 ### AbstractLevelDOWN#_get(key, options, callback)
@@ -185,11 +199,36 @@ Remember that each of these methods, if you implement them, will receive exactly
 
 If `batch()` is called without argument or with only an options object then it should return a `Batch` object with chainable methods. Otherwise it will invoke a classic batch operation.
 
+the batch should be rename to transact more accurate.
+
+<code>batch()</code> can be used for very fast bulk-write operations (both *put* and *delete*). The `array` argument should contain a list of operations to be executed sequentially, although as a whole they are performed as an atomic operation inside LevelDB. Each operation is contained in an object having the following properties: `type`, `key`, `value`, where the *type* is either `'put'` or `'del'`. In the case of `'del'` the `'value'` property is ignored. Any entries with a `'key'` of `null` or `undefined` will cause an error to be returned on the `callback` and any `'type': 'put'` entry with a `'value'` of `null` or `undefined` will return an error.
+
+```js
+var ops = [
+    { type: 'del', key: 'father' }
+  , { type: 'put', key: 'name', value: 'Yuri Irsenovich Kim' }
+  , { type: 'put', key: 'dob', value: '16 February 1941' }
+  , { type: 'put', key: 'spouse', value: 'Kim Young-sook' }
+  , { type: 'put', key: 'occupation', value: 'Clown' }
+]
+
+db.batch(ops, function (err) {
+  if (err) return console.log('Ooops!', err)
+  console.log('Great success dear leader!')
+})
+```
+
 ### AbstractLevelDOWN#_chainedBatch()
 
 By default an `batch()` operation without argument returns a blank `AbstractChainedBatch` object. The prototype is available on the main exports for you to extend. If you want to implement chainable batch operations then you should extend the `AbstractChaindBatch` and return your object in the `_chainedBatch()` method.
 
 ### AbstractLevelDOWN#_approximateSize(start, end, callback)
+
+### AbstractLevelDOWN#IteratorClass
+
+You can override the `IteratorClass` to your Iterator.
+After override this, it is not necessary to implement the `"_iterator()"` method.
+
 ### AbstractLevelDOWN#_iterator(options)
 
 By default an `iterator()` operation returns a blank `AbstractIterator` object. The prototype is available on the main exports for you to extend. If you want to implement iterator operations then you should extend the `AbstractIterator` and return your object in the `_iterator(options)` method.
@@ -200,10 +239,27 @@ By default an `iterator()` operation returns a blank `AbstractIterator` object. 
 
 Provided with the current instance of `AbstractLevelDOWN` by default.
 
-### AbstractIterator#_next(callback)
-### AbstractIterator#_end(callback)
+### Sync methods:
+
+#### AbstractIterator#_nextSync()
+
+__return__
+ 
+* if any result: return a two elements of array
+  * the first is the key
+  * the second is the value
+* or return false, if no any data yet.
+
+
+#### AbstractIterator#_endSync()
+
+### Async methods:
+
+#### AbstractIterator#_next(callback)
+#### AbstractIterator#_end(callback)
 
 ### AbstractChainedBatch
+
 Provided with the current instance of `AbstractLevelDOWN` by default.
 
 ### AbstractChainedBatch#_put(key, value)

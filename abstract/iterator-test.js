@@ -485,6 +485,15 @@ module.exports.tearDown = function (test, testCommon) {
   })
 }
 
+module.exports.sync = function (Iterator, test) {
+  test('sync', function (t) {
+    if (Iterator.prototype._nextSync) {
+      delete Iterator.prototype._next
+    }
+    t.end()
+  })
+}
+
 module.exports.all = function (leveldown, test, testCommon) {
   module.exports.setUp(leveldown, test, testCommon)
   module.exports.args(test)
@@ -492,4 +501,13 @@ module.exports.all = function (leveldown, test, testCommon) {
   module.exports.iterator(leveldown, test, testCommon, testCommon.collectEntries)
   module.exports.snapshot(leveldown, test, testCommon)
   module.exports.tearDown(test, testCommon)
+  var Iterator = leveldown.prototype.IteratorClass
+  if (Iterator.prototype._nextSync) {
+    module.exports.sync(Iterator, test)
+    module.exports.setUp(leveldown, test, testCommon)
+    module.exports.sequence(test)
+    module.exports.iterator(leveldown, test, testCommon, testCommon.collectEntries)
+    module.exports.snapshot(leveldown, test, testCommon)
+    module.exports.tearDown(test, testCommon)
+  }
 }

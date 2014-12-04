@@ -5,12 +5,9 @@ var xtend                = require('xtend')
   , setImmediate         = global.setImmediate || process.nextTick
 
 function AbstractLevelDOWN (location) {
-  if (!arguments.length || location === undefined)
-    throw new Error('constructor requires at least a location argument')
-
-  if (typeof location != 'string')
+  //not all database have the location argument.
+  if (location && typeof location != 'string')
     throw new Error('constructor requires a location string argument')
-
   this.location = location
 }
 
@@ -406,6 +403,9 @@ AbstractLevelDOWN.prototype._setupIteratorOptions = function (options) {
   return options
 }
 
+//should override this to test sync
+AbstractLevelDOWN.prototype.IteratorClass = AbstractIterator
+
 AbstractLevelDOWN.prototype.iterator = function (options) {
   if (typeof options != 'object')
     options = {}
@@ -415,7 +415,7 @@ AbstractLevelDOWN.prototype.iterator = function (options) {
   if (typeof this._iterator == 'function')
     return this._iterator(options)
 
-  return new AbstractIterator(this)
+  return new this.IteratorClass(this)
 }
 
 AbstractLevelDOWN.prototype._chainedBatch = function () {

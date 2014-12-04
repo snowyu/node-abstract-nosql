@@ -6,6 +6,58 @@ function AbstractIterator (db) {
   this._nexting = false
 }
 
+AbstractIterator.prototype._next = function(callback) {
+  var self = this
+  if (this._nextSync) setImmediate(function(){
+    try {
+      var result = self._nextSync()
+      self._nexting = false
+      if (result) {
+        callback(null, result[0], result[1])
+      } else
+        callback()
+    } catch(e) {
+      self._nexting = false
+      callback(e)
+    }
+  })
+  else
+    setImmediate(function () {
+      self._nexting = false
+      callback()
+    })
+}
+
+AbstractIterator.prototype._end = function(callback) {
+  var self = this
+  if (this._endSync) setImmediate(function(){
+    try {
+      var result = self._endSync()
+      callback(null, result)
+    } catch(e) {
+      callback(e)
+    }
+  })
+  setImmediate(function () {
+    callback()
+  })
+}
+
+AbstractIterator.prototype.nextSync = function () {
+  if (this._nextSync) {
+    this._nexting = true
+    var result = this._nextSync()
+    this._nexting = false
+    return result
+  }
+  throw new Error("NotImplementation")
+}
+
+AbstractIterator.prototype.endSync = function () {
+  if (this._endSync) return this._endSync()
+  throw new Error("NotImplementation")
+}
+
 AbstractIterator.prototype.next = function (callback) {
   var self = this
 
@@ -18,16 +70,9 @@ AbstractIterator.prototype.next = function (callback) {
     return callback(new Error('cannot call next() before previous next() has completed'))
 
   self._nexting = true
-  if (typeof self._next == 'function') {
-    return self._next(function () {
-      self._nexting = false
-      callback.apply(null, arguments)
-    })
-  }
-
-  process.nextTick(function () {
+  return self._next(function () {
     self._nexting = false
-    callback()
+    callback.apply(null, arguments)
   })
 }
 
@@ -40,10 +85,7 @@ AbstractIterator.prototype.end = function (callback) {
 
   this._ended = true
 
-  if (typeof this._end == 'function')
-    return this._end(callback)
-
-  process.nextTick(callback)
+  return this._end(callback)
 }
 
 module.exports = AbstractIterator
