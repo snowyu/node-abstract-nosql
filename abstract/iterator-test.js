@@ -308,6 +308,16 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
+  test('test iterator with gte=30 and lte=70', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, gte: '30', lte: '70' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41, 'correct number of entries')
+      var expected = sourceData.slice(30, 71).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
   test('test iterator with limit=20', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, limit: 20 }), function (err, data) {
       t.error(err)
@@ -407,6 +417,14 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
 
   test('test iterator with start and end after database and and reverse=true', function (t) {
     collectEntries(db.iterator({ start: '9b', end: '9a', reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 0, 'correct number of entries')
+      t.end()
+    })
+  })
+
+  test('test iterator with start/gt/gte=new Buffer("9a") and end/lt/lte=new Buffer("9b")', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: true, valueAsBuffer: false, start: new Buffer('9b'), end: new Buffer('9a'), lt: new Buffer('9b'), gt: new Buffer('9a'), gte: new Buffer('9a'), lte: new Buffer('9b') }), function (err, data) {
       t.error(err)
       t.equal(data.length, 0, 'correct number of entries')
       t.end()
