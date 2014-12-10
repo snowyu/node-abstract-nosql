@@ -16,7 +16,15 @@ var kOk = 0
 
 var
   errors = [
-    "Ok", "NotFound", "Corruption", "NotSupported", "InvalidArgument", "IOError", "NotOpened", "InvalidType", "InvalidFormat"
+      "Ok"
+    , "NotFound"
+    , "Corruption"
+    , "NotSupported"
+    , "InvalidArgument"
+    , "IO"
+    , "NotOpened"
+    , "InvalidType"
+    , "InvalidFormat"
   ]
 
 function firstLower(s) {
@@ -45,7 +53,7 @@ for (var i=0; i < errors.length; i++) {
   //generate AbstractError.isNotFound(err) class methods:
   AbstractError["is"+errors[i]] = (function(i, aType) {
     return function(err) {
-      return err.code === i || (err.message && err.message.substring(0, aType.length) === aType)
+      return err.code === i || (err.code == null && err.message && err.message.substring(0, aType.length) === aType)
     }
   })(i, errors[i])
   //generate AbstractError.notFound() instance methods:
@@ -55,11 +63,12 @@ for (var i=0; i < errors.length; i++) {
     }
   })("is"+errors[i])
   if (i>0) {
-    var Err = (function(i){
+    var Err = (function(i, aType){
       return function(msg) {
-       AbstractError.call(this, msg, i)
+        if (msg == null || msg == "") msg = aType
+        AbstractError.call(this, msg, i)
       }
-    })(i)
+    })(i, errors[i])
 
     inherits(Err, AbstractError)
     //generate NotFoundError Classes

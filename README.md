@@ -32,6 +32,7 @@ Additionally, all methods provide argument checking and sensible defaults for op
 ## Changes
 
 
++ Add the AbstractError and error code supports.
 * DB constructor allows no location.
 + Add synchronous methods supports.
   * Add the synchronous methods support now. You can implement the synchronous methods only.
@@ -40,6 +41,49 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 + isExists/isExistsSync optional method to test key whether exists.
   * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
+
+## AbstractError Classes
+
+### AbstractError
+
+All Errors are derived from the AbstractError.
+
+* Members:
+  * message: the error message.
+  * code: the error code.
+* Methods:
+  * ok()
+  * notFound()
+  * ....
+  * invalidFormat()
+* Class Methods:
+  * AbstractError.isOk(err)
+  * AbstractError.isNotFound(err)
+  * ...
+
+the error codes:
+
+* AbstractError.Ok              = 0
+* AbstractError.NotFound        = 1
+* AbstractError.Corruption      = 2
+* AbstractError.NotSupported    = 3
+* AbstractError.InvalidArgument = 4
+* AbstractError.IO              = 5
+* AbstractError.NotOpened       = 6
+* AbstractError.InvalidType     = 7
+* AbstractError.InvalidFormat   = 8
+
+
+### Other Error Classes:
+
+* NotFoundError
+* CorruptionError
+* NotSupportedError/NotImplementedError
+* InvalidArgumentError
+* IOError
+* NotOpenedError
+* InvalidTypeError
+* InvalidFormatError
 
 ## Example
 

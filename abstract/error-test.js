@@ -25,11 +25,15 @@ module.exports.error = function (test) {
   })
 
   test('test AbstractError Classes', function (t) {
-    var err = new AbstractError("", 1)
+    var err = new Errors.NotFoundError()
     t.ok(AbstractError.isNotFound(err), "should be notFound")
+    t.ok(err.notFound(), "should be notFound")
     t.notOk(AbstractError.isOk(err), "should not be ok")
     err.code = 0
     t.ok(AbstractError.isOk(err), "should be ok")
+    t.notOk(err.notFound(), "should not be notFound")
+    err.code = null
+    t.ok(err.notFound(), "should be notFound")
     t.end()
   })
 
@@ -38,6 +42,9 @@ module.exports.error = function (test) {
     t.notOk(err.ok(), "should not be ok")
     t.notOk(err.notFound(), "should not be notFound")
     t.ok(err.invalidArgument(), "should be invalidArgument")
+    t.equal(err.message, "InvalidArgument")
+    err = new Errors.InvalidArgumentError()
+    t.equal(err.message, "InvalidArgument")
     t.end()
   })
 }
