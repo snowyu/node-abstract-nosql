@@ -1,7 +1,5 @@
 /* Copyright (c) 2013 Rod Vagg, MIT License */
-var xtend                = require('xtend')
-  , inherits             = require('util').inherits
-  , setImmediate         = global.setImmediate || process.nextTick
+var inherits             = require('util').inherits
 
 var kOk = 0
   , kNotFound = 1
