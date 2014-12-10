@@ -9,23 +9,22 @@ var kOk = 0
   , kNotSupported = 3
   , kInvalidArgument = 4
   , kIOError = 5
-  , kNotOpened = 6
-  , kInvalidType = 7
-  , kInvalidFormat = 8
+  , kNotOpened     = 101
+  , kInvalidType   = 102
+  , kInvalidFormat = 103
 
 
-var
-  errors = [
-      "Ok"
-    , "NotFound"
-    , "Corruption"
-    , "NotSupported"
-    , "InvalidArgument"
-    , "IO"
-    , "NotOpened"
-    , "InvalidType"
-    , "InvalidFormat"
-  ]
+var errors = {
+  "Ok": kOk
+  , "NotFound": kNotFound
+  , "Corruption": kCorruption
+  , "NotSupported": kNotSupported
+  , "InvalidArgument": kInvalidArgument
+  , "IO": kIOError
+  , "NotOpened": kNotOpened
+  , "InvalidType": kInvalidType
+  , "InvalidFormat": kInvalidFormat
+}
 
 function firstLower(s) {
   return s[0].toLowerCase()+s.substring(1)
@@ -48,31 +47,31 @@ function NotImplementedError() {
 
 inherits(NotImplementedError, AbstractError)
 
-for (var i=0; i < errors.length; i++) {
-  AbstractError[errors[i]] = i
+for (var k in errors) {
+  AbstractError[k] = errors[k]
   //generate AbstractError.isNotFound(err) class methods:
-  AbstractError["is"+errors[i]] = (function(i, aType) {
+  AbstractError["is"+k] = (function(i, aType) {
     return function(err) {
       return err.code === i || (err.code == null && err.message && err.message.substring(0, aType.length) === aType)
     }
-  })(i, errors[i])
+  })(errors[k], k)
   //generate AbstractError.notFound() instance methods:
-  AbstractError.prototype[firstLower(errors[i])] = (function(aType) {
+  AbstractError.prototype[firstLower(k)] = (function(aType) {
     return function() {
       return AbstractError[aType](this)
     }
-  })("is"+errors[i])
-  if (i>0) {
+  })("is"+k)
+  if (errors[k]>0) {
     var Err = (function(i, aType){
       return function(msg) {
         if (msg == null || msg == "") msg = aType
         AbstractError.call(this, msg, i)
       }
-    })(i, errors[i])
+    })(errors[k], k)
 
     inherits(Err, AbstractError)
     //generate NotFoundError Classes
-    module.exports[errors[i]+"Error"] = Err
+    module.exports[k+"Error"] = Err
   }
 }
 
