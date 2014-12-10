@@ -4,6 +4,10 @@ var xtend                = require('xtend')
   , AbstractChainedBatch = require('./abstract-chained-batch')
   , setImmediate         = global.setImmediate || process.nextTick
 
+function isNotFoundError(err) {
+  return (err.message.substring(0,8) === "NotFound")
+}
+
 function AbstractLevelDOWN (location) {
   //not all database have the location argument.
   if (location && typeof location != 'string')
@@ -12,12 +16,29 @@ function AbstractLevelDOWN (location) {
 }
 
 //the optimal low-level sync functions:
+AbstractLevelDOWN.prototype.isExistsSync = function (key, options) {
+  if (this._isExistsSync) {
+    var result = this._isExistsSync(key, options)
+    return result
+  } else if (this._getSync) try {
+    this._getSync(key, options)
+    return true
+  } catch(err) {
+    //if (/^NotFound/.test(err.message))
+    if (isNotFoundError(err))
+      return false
+    else
+      throw err
+  }
+  throw new Error("NotImplemented")
+}
+
 AbstractLevelDOWN.prototype.getSync = function (key, options) {
   if (this._getSync) {
     var result = this._getSync(key, options)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractLevelDOWN.prototype.putSync = function (key, value, options) {
@@ -25,7 +46,7 @@ AbstractLevelDOWN.prototype.putSync = function (key, value, options) {
     var result = this._putSync(key, value, options)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractLevelDOWN.prototype.delSync = function (key, options) {
@@ -33,7 +54,7 @@ AbstractLevelDOWN.prototype.delSync = function (key, options) {
     var result = this._delSync(key, options)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractLevelDOWN.prototype.batchSync = function (operations, options) {
@@ -41,7 +62,7 @@ AbstractLevelDOWN.prototype.batchSync = function (operations, options) {
     var result = this._batchSync(operations, options)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractLevelDOWN.prototype.approximateSizeSync = function (start, end) {
@@ -49,7 +70,7 @@ AbstractLevelDOWN.prototype.approximateSizeSync = function (start, end) {
     var result = this._approximateSizeSync(start, end)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractLevelDOWN.prototype.openSync = function (options) {
@@ -57,7 +78,7 @@ AbstractLevelDOWN.prototype.openSync = function (options) {
     var result = this._openSync(options)
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 //if successful should return true.
@@ -66,7 +87,7 @@ AbstractLevelDOWN.prototype.closeSync = function () {
     var result = this._closeSync()
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 //the async methods simulated by sync methods:
@@ -100,6 +121,28 @@ AbstractLevelDOWN.prototype._close = function (callback) {
   })
   else
     setImmediate(callback)
+}
+AbstractLevelDOWN.prototype._isExists = function (key, options, callback) {
+  var that = this
+  if (this._isExistsSync) setImmediate(function() {
+    var result
+    try {
+      result = that._isExistsSync(key, options)
+    } catch (err) {
+      callback(err)
+      return
+    }
+    callback(null, result)
+  })
+  else this._get(key, options, function(err, value){
+    if (err) {
+      if (isNotFoundError(err))
+        callback(null, false)
+      else
+        callback(err)
+    } else
+      callback(null, true)
+  })
 }
 AbstractLevelDOWN.prototype._get = function (key, options, callback) {
   var that = this
@@ -222,6 +265,22 @@ AbstractLevelDOWN.prototype.close = function (callback) {
   }
   else
     return this.closeSync()
+}
+
+AbstractLevelDOWN.prototype.isExists = function (key, options, callback) {
+  if (typeof options == 'function') {
+    callback = options
+    options = {}
+  }
+
+  if (!this._isBuffer(key))
+    key = String(key)
+
+  if (callback) {
+    this._isExists(key, options, callback)
+  } else {
+    return this.isExistsSync(key, options)
+  }
 }
 
 AbstractLevelDOWN.prototype.get = function (key, options, callback) {

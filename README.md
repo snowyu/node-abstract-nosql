@@ -38,6 +38,8 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * The asynchronous methods will be simulated via these synchronous methods. If you wanna
   * support the asynchronous methods only, just do not implement these synchronous methods.
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
++ isExists/isExistsSync optional method to test key whether exists.
+  * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
 
 ## Example
 
@@ -71,7 +73,12 @@ FakeLevelDOWN.prototype._putSync = function (key, value, options) {
   return true
 }
 
-FakeLevelDOWN.prototype._get = function (key, options) {
+//the isExists is an optional method:
+FakeLevelDOWN.prototype._isExistsSync = function (key, options) {
+  return this._store.hasOwnProperty('_' + key)
+}
+
+FakeLevelDOWN.prototype._getSync = function (key, options) {
   var value = this._store['_' + key]
   if (value === undefined) {
     // 'NotFound' error, consistent with LevelDOWN API
@@ -80,7 +87,7 @@ FakeLevelDOWN.prototype._get = function (key, options) {
   return value
 }
 
-FakeLevelDOWN.prototype._del = function (key, options) {
+FakeLevelDOWN.prototype._delSync = function (key, options) {
   delete this._store['_' + key]
   return true
 }
@@ -100,12 +107,17 @@ db.put('foo', 'bar', function (err) {
   db.get('foo', function (err, value) {
     if (err) throw err
     console.log('Got foo =', value)
+    db.isExists('foo', function(err, isExists){
+      if (err) throw err
+      console.log('isExists foo =', isExists)
+    })
   })
 })
 
 //sync:
 db.put('foo', 'bar')
 console.log(db.get('foo'))
+console.log(db.isExists('foo'))
 ```
 
 use async methods(no sync supports):
@@ -136,6 +148,14 @@ FakeLevelDOWN.prototype._put = function (key, value, options, callback) {
   key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
   this._store[key] = value
   process.nextTick(callback)
+}
+
+//the isExists is an optional method:
+FakeLevelDOWN.prototype._isExists = function (key, options, callback) {
+  var value = this._store.hasOwnProperty('_' + key)
+  process.nextTick(function () {
+    callback(null, value)
+  })
 }
 
 FakeLevelDOWN.prototype._get = function (key, options, callback) {

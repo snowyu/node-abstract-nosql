@@ -50,12 +50,12 @@ AbstractIterator.prototype.nextSync = function () {
     this._nexting = false
     return result
   }
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractIterator.prototype.endSync = function () {
   if (this._endSync) return this._endSync()
-  throw new Error("NotImplementation")
+  throw new Error("NotImplemented")
 }
 
 AbstractIterator.prototype.next = function (callback) {

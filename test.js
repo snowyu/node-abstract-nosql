@@ -20,6 +20,9 @@ require('./abstract/open-test').args(factory, tap.test, testCommon)
 require('./abstract/del-test').setUp(factory, tap.test, testCommon)
 require('./abstract/del-test').args(tap.test)
 
+require('./abstract/isExists-test').setUp(factory, tap.test, testCommon)
+require('./abstract/isExists-test').args(tap.test)
+
 require('./abstract/get-test').setUp(factory, tap.test, testCommon)
 require('./abstract/get-test').args(tap.test)
 
