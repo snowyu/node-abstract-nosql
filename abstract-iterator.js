@@ -1,5 +1,6 @@
 /* Copyright (c) 2013 Rod Vagg, MIT License */
-
+var NotImplementedError = require('./abstract-error').NotImplementedError
+  
 function AbstractIterator (db) {
   this.db = db
   this._ended = false
@@ -50,12 +51,12 @@ AbstractIterator.prototype.nextSync = function () {
     this._nexting = false
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
 AbstractIterator.prototype.endSync = function () {
   if (this._endSync) return this._endSync()
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
 AbstractIterator.prototype.next = function (callback) {

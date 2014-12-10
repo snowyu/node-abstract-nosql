@@ -13,6 +13,8 @@ function factory (location) {
 
 /*** compatibility with basic LevelDOWN API ***/
 
+require('./abstract/error-test').all(factory, tap.test, testCommon)
+
 require('./abstract/leveldown-test').args(factory, tap.test, testCommon)
 
 require('./abstract/open-test').args(factory, tap.test, testCommon)

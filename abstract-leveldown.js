@@ -1,14 +1,14 @@
 /* Copyright (c) 2013 Rod Vagg, MIT License */
 var xtend                = require('xtend')
+  , Errors               = require('./abstract-error')
+  , AbstractError        = Errors.AbstractError
+  , NotImplementedError  = Errors.NotImplementedError
   , AbstractIterator     = require('./abstract-iterator')
   , AbstractChainedBatch = require('./abstract-chained-batch')
   , setImmediate         = global.setImmediate || process.nextTick
 
-function isNotFoundError(err) {
-  return (err.message.substring(0,8) === "NotFound")
-}
 
-function AbstractLevelDOWN (location) {
+function AbstractNoSQL (location) {
   //not all database have the location argument.
   if (location && typeof location != 'string')
     throw new Error('constructor requires a location string argument')
@@ -16,7 +16,7 @@ function AbstractLevelDOWN (location) {
 }
 
 //the optimal low-level sync functions:
-AbstractLevelDOWN.prototype.isExistsSync = function (key, options) {
+AbstractNoSQL.prototype.isExistsSync = function (key, options) {
   if (this._isExistsSync) {
     var result = this._isExistsSync(key, options)
     return result
@@ -25,74 +25,74 @@ AbstractLevelDOWN.prototype.isExistsSync = function (key, options) {
     return true
   } catch(err) {
     //if (/^NotFound/.test(err.message))
-    if (isNotFoundError(err))
+    if (AbstractError.isNotFound(err))
       return false
     else
       throw err
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.getSync = function (key, options) {
+AbstractNoSQL.prototype.getSync = function (key, options) {
   if (this._getSync) {
     var result = this._getSync(key, options)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.putSync = function (key, value, options) {
+AbstractNoSQL.prototype.putSync = function (key, value, options) {
   if (this._putSync) {
     var result = this._putSync(key, value, options)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.delSync = function (key, options) {
+AbstractNoSQL.prototype.delSync = function (key, options) {
   if (this._delSync) {
     var result = this._delSync(key, options)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.batchSync = function (operations, options) {
+AbstractNoSQL.prototype.batchSync = function (operations, options) {
   if (this._batchSync) {
     var result = this._batchSync(operations, options)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.approximateSizeSync = function (start, end) {
+AbstractNoSQL.prototype.approximateSizeSync = function (start, end) {
   if (this._approximateSizeSync) {
     var result = this._approximateSizeSync(start, end)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
-AbstractLevelDOWN.prototype.openSync = function (options) {
+AbstractNoSQL.prototype.openSync = function (options) {
   if (this._openSync) {
     var result = this._openSync(options)
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
 //if successful should return true.
-AbstractLevelDOWN.prototype.closeSync = function () {
+AbstractNoSQL.prototype.closeSync = function () {
   if (this._closeSync) {
     var result = this._closeSync()
     return result
   }
-  throw new Error("NotImplemented")
+  throw new NotImplementedError()
 }
 
 //the async methods simulated by sync methods:
 //the derived class can override these methods to implement the real async methods for better performance.
-AbstractLevelDOWN.prototype._open = function (options, callback) {
+AbstractNoSQL.prototype._open = function (options, callback) {
   var that = this
   if (this._openSync) setImmediate(function() {
     var result
@@ -107,7 +107,7 @@ AbstractLevelDOWN.prototype._open = function (options, callback) {
   else
     setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._close = function (callback) {
+AbstractNoSQL.prototype._close = function (callback) {
   var that = this
   if (this._closeSync) setImmediate(function() {
     var result
@@ -122,7 +122,7 @@ AbstractLevelDOWN.prototype._close = function (callback) {
   else
     setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._isExists = function (key, options, callback) {
+AbstractNoSQL.prototype._isExists = function (key, options, callback) {
   var that = this
   if (this._isExistsSync) setImmediate(function() {
     var result
@@ -136,7 +136,7 @@ AbstractLevelDOWN.prototype._isExists = function (key, options, callback) {
   })
   else this._get(key, options, function(err, value){
     if (err) {
-      if (isNotFoundError(err))
+      if (AbstractError.isNotFound(err))
         callback(null, false)
       else
         callback(err)
@@ -144,7 +144,7 @@ AbstractLevelDOWN.prototype._isExists = function (key, options, callback) {
       callback(null, true)
   })
 }
-AbstractLevelDOWN.prototype._get = function (key, options, callback) {
+AbstractNoSQL.prototype._get = function (key, options, callback) {
   var that = this
   if (this._getSync) setImmediate(function() {
     var result
@@ -159,7 +159,7 @@ AbstractLevelDOWN.prototype._get = function (key, options, callback) {
   else
     setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._put = function (key, value, options, callback) {
+AbstractNoSQL.prototype._put = function (key, value, options, callback) {
   var that = this
   if (this._putSync) setImmediate(function() {
     var result
@@ -174,7 +174,7 @@ AbstractLevelDOWN.prototype._put = function (key, value, options, callback) {
   else
     setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._del = function (key, options, callback) {
+AbstractNoSQL.prototype._del = function (key, options, callback) {
   var that = this
   if (this._delSync) setImmediate(function() {
     var result
@@ -189,7 +189,7 @@ AbstractLevelDOWN.prototype._del = function (key, options, callback) {
   else
     setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._batch = function (array, options, callback) {
+AbstractNoSQL.prototype._batch = function (array, options, callback) {
   var that = this
   if (this._batchSync) setImmediate(function() {
     var result
@@ -205,7 +205,7 @@ AbstractLevelDOWN.prototype._batch = function (array, options, callback) {
     setImmediate(callback)
 }
 //TODO: remove from here, not a necessary primitive
-AbstractLevelDOWN.prototype._approximateSize = function (start, end, callback) {
+AbstractNoSQL.prototype._approximateSize = function (start, end, callback) {
   var that = this
   if (this._approximateSizeSync) setImmediate(function() {
     var result
@@ -222,7 +222,7 @@ AbstractLevelDOWN.prototype._approximateSize = function (start, end, callback) {
 }
 //slower impl:
 /*
-AbstractLevelDOWN.prototype._exec = function (fn, args, callback) {
+AbstractNoSQL.prototype._exec = function (fn, args, callback) {
   var that = this
   if (fn) setImmediate(function() {
     var result
@@ -236,11 +236,11 @@ AbstractLevelDOWN.prototype._exec = function (fn, args, callback) {
   })
   setImmediate(callback)
 }
-AbstractLevelDOWN.prototype._open = function (options, callback) {
+AbstractNoSQL.prototype._open = function (options, callback) {
   this._exec(this._openSync, [options], callback)
 }
 */
-AbstractLevelDOWN.prototype.open = function (options, callback) {
+AbstractNoSQL.prototype.open = function (options, callback) {
   if (typeof options == 'function')
     callback = options
 
@@ -256,7 +256,7 @@ AbstractLevelDOWN.prototype.open = function (options, callback) {
     return this.openSync(options)
 }
 
-AbstractLevelDOWN.prototype.close = function (callback) {
+AbstractNoSQL.prototype.close = function (callback) {
   if (callback) {
     if (typeof callback === 'function')
       this._close(callback)
@@ -267,7 +267,7 @@ AbstractLevelDOWN.prototype.close = function (callback) {
     return this.closeSync()
 }
 
-AbstractLevelDOWN.prototype.isExists = function (key, options, callback) {
+AbstractNoSQL.prototype.isExists = function (key, options, callback) {
   if (typeof options == 'function') {
     callback = options
     options = {}
@@ -283,7 +283,7 @@ AbstractLevelDOWN.prototype.isExists = function (key, options, callback) {
   }
 }
 
-AbstractLevelDOWN.prototype.get = function (key, options, callback) {
+AbstractNoSQL.prototype.get = function (key, options, callback) {
   var err
 
   if (typeof options == 'function')
@@ -311,7 +311,7 @@ AbstractLevelDOWN.prototype.get = function (key, options, callback) {
   }
 }
 
-AbstractLevelDOWN.prototype.put = function (key, value, options, callback) {
+AbstractNoSQL.prototype.put = function (key, value, options, callback) {
   var err
 
   if (typeof options == 'function')
@@ -342,7 +342,7 @@ AbstractLevelDOWN.prototype.put = function (key, value, options, callback) {
   }
 }
 
-AbstractLevelDOWN.prototype.del = function (key, options, callback) {
+AbstractNoSQL.prototype.del = function (key, options, callback) {
   var err
 
   if (typeof options == 'function')
@@ -369,7 +369,7 @@ AbstractLevelDOWN.prototype.del = function (key, options, callback) {
   }
 }
 
-AbstractLevelDOWN.prototype.batch = function (array, options, callback) {
+AbstractNoSQL.prototype.batch = function (array, options, callback) {
   if (!arguments.length)
     return this._chainedBatch()
 
@@ -422,7 +422,7 @@ AbstractLevelDOWN.prototype.batch = function (array, options, callback) {
 }
 
 //TODO: remove from here, not a necessary primitive
-AbstractLevelDOWN.prototype.approximateSize = function (start, end, callback) {
+AbstractNoSQL.prototype.approximateSize = function (start, end, callback) {
   if (   start == null
       || end == null
       || typeof start == 'function'
@@ -442,7 +442,7 @@ AbstractLevelDOWN.prototype.approximateSize = function (start, end, callback) {
     return this.approximateSize(start, end)
 }
 
-AbstractLevelDOWN.prototype._setupIteratorOptions = function (options) {
+AbstractNoSQL.prototype._setupIteratorOptions = function (options) {
   var self = this
 
   options = xtend(options)
@@ -463,9 +463,9 @@ AbstractLevelDOWN.prototype._setupIteratorOptions = function (options) {
 }
 
 //should override this to test sync
-AbstractLevelDOWN.prototype.IteratorClass = AbstractIterator
+AbstractNoSQL.prototype.IteratorClass = AbstractIterator
 
-AbstractLevelDOWN.prototype.iterator = function (options) {
+AbstractNoSQL.prototype.iterator = function (options) {
   if (typeof options != 'object')
     options = {}
 
@@ -477,15 +477,15 @@ AbstractLevelDOWN.prototype.iterator = function (options) {
   return new this.IteratorClass(this)
 }
 
-AbstractLevelDOWN.prototype._chainedBatch = function () {
+AbstractNoSQL.prototype._chainedBatch = function () {
   return new AbstractChainedBatch(this)
 }
 
-AbstractLevelDOWN.prototype._isBuffer = function (obj) {
+AbstractNoSQL.prototype._isBuffer = function (obj) {
   return Buffer.isBuffer(obj)
 }
 
-AbstractLevelDOWN.prototype._checkKey = function (obj, type) {
+AbstractNoSQL.prototype._checkKey = function (obj, type) {
 
   if (obj === null || obj === undefined)
     return new Error(type + ' cannot be `null` or `undefined`')
@@ -497,6 +497,7 @@ AbstractLevelDOWN.prototype._checkKey = function (obj, type) {
     return new Error(type + ' cannot be an empty String')
 }
 
-module.exports.AbstractLevelDOWN    = AbstractLevelDOWN
+module.exports.AbstractLevelDOWN    = AbstractNoSQL
+module.exports.AbstractNoSQL        = AbstractNoSQL
 module.exports.AbstractIterator     = AbstractIterator
 module.exports.AbstractChainedBatch = AbstractChainedBatch
