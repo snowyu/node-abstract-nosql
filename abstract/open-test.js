@@ -12,7 +12,9 @@ module.exports.open = function (leveldown, test, testCommon) {
     // default createIfMissing=true, errorIfExists=false
     db.open(function (err) {
         t.error(err)
+        t.ok(db.isOpen())
         db.close(function () {
+          t.notOk(db.isOpen())
           t.end()
         })
       })
@@ -24,7 +26,9 @@ module.exports.open = function (leveldown, test, testCommon) {
     // default createIfMissing=true, errorIfExists=false
     db.open({}, function (err) {
         t.error(err)
+        t.ok(db.isOpen())
         db.close(function () {
+          t.notOk(db.isOpen())
           t.end()
         })
       })
@@ -34,11 +38,15 @@ module.exports.open = function (leveldown, test, testCommon) {
 
     db.open(function (err) {
       t.error(err)
+      t.ok(db.isOpen())
       db.close(function (err) {
         t.error(err)
+        t.notOk(db.isOpen())
         db.open(function (err) {
           t.error(err)
+          t.ok(db.isOpen())
           db.close(function () {
+            t.notOk(db.isOpen())
             t.end()
           })
         })
@@ -53,6 +61,7 @@ module.exports.openAdvanced = function (leveldown, test, testCommon) {
 
     db.open({ createIfMissing: false }, function (err) {
       t.ok(err, 'error')
+      t.notOk(db.isOpen())
       t.ok(/does not exist/.test(err.message), 'error is about dir not existing')
       t.end()
     })
@@ -65,13 +74,16 @@ module.exports.openAdvanced = function (leveldown, test, testCommon) {
     // make a valid database first, then close and dispose
     db.open({}, function (err) {
       t.error(err)
+      t.ok(db.isOpen())
       db.close(function (err) {
         t.error(err)
+        t.notOk(db.isOpen())
 
         // open again with 'errorIfExists'
         db = leveldown(location)
         db.open({ createIfMissing: false, errorIfExists: true }, function (err) {
           t.ok(err, 'error')
+          t.notOk(db.isOpen())
           t.ok(/exists/.test(err.message), 'error is about already existing')
           t.end()
         })

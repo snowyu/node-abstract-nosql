@@ -76,6 +76,7 @@ AbstractNoSQL.prototype.approximateSizeSync = function (start, end) {
 AbstractNoSQL.prototype.openSync = function (options) {
   if (this._openSync) {
     var result = this._openSync(options)
+    this._opened = result
     return result
   }
   throw new NotImplementedError()
@@ -85,6 +86,7 @@ AbstractNoSQL.prototype.openSync = function (options) {
 AbstractNoSQL.prototype.closeSync = function () {
   if (this._closeSync) {
     var result = this._closeSync()
+    this._opened = !result
     return result
   }
   throw new NotImplementedError()
@@ -250,16 +252,26 @@ AbstractNoSQL.prototype.open = function (options, callback) {
   options.createIfMissing = options.createIfMissing != false
   options.errorIfExists = !!options.errorIfExists
 
-  if (callback)
-    this._open(options, callback)
+  if (callback) {
+    var that = this
+    this._open(options, function(err, result){
+      that._opened = !err && (result == null || result === true)
+      callback(err, result)
+    })
+  }
   else
     return this.openSync(options)
 }
 
 AbstractNoSQL.prototype.close = function (callback) {
   if (callback) {
-    if (typeof callback === 'function')
-      this._close(callback)
+    if (typeof callback === 'function') {
+      var that = this
+      this._close(function(err, result){
+        that._opened = !(err == null && (result == null || result === true))
+        callback(err, result)
+      })
+    }
     else
       throw new Error('close() requires callback function argument')
   }
@@ -495,6 +507,9 @@ AbstractNoSQL.prototype._checkKey = function (obj, type) {
       return new Error(type + ' cannot be an empty Buffer')
   } else if (String(obj) === '')
     return new Error(type + ' cannot be an empty String')
+}
+AbstractNoSQL.prototype.isOpen = function() {
+  return !!this._opened
 }
 
 module.exports.AbstractLevelDOWN    = AbstractNoSQL
