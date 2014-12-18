@@ -394,8 +394,8 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     options.keys = options.keys isnt false
     options.values = options.values isnt false
     options.limit = (if "limit" of options then options.limit else -1)
-    options.keyAsBuffer = options.keyAsBuffer isnt false
-    options.valueAsBuffer = options.valueAsBuffer isnt false
+    options.keyAsBuffer = options.keyAsBuffer is true
+    options.valueAsBuffer = options.valueAsBuffer is true
     options
 
 

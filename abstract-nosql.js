@@ -551,8 +551,8 @@
       options.keys = options.keys !== false;
       options.values = options.values !== false;
       options.limit = ("limit" in options ? options.limit : -1);
-      options.keyAsBuffer = options.keyAsBuffer !== false;
-      options.valueAsBuffer = options.valueAsBuffer !== false;
+      options.keyAsBuffer = options.keyAsBuffer === true;
+      options.valueAsBuffer = options.valueAsBuffer === true;
       return options;
     };
 
