@@ -43,8 +43,8 @@ Additionally, all methods provide argument checking and sensible defaults for op
 + isExists/isExistsSync optional method to test key whether exists.
   * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
 + the AbstractNoSQL class supports events now.
-  * open/ready event after the database is opened.
-  * closed event after the database is closed.
+  * emit `'open'` and `'ready'` event after the database is opened.
+  * emit `'closed'` event after the database is closed.
 + isOpen()/opened to test the database whether opened.
 
 ## AbstractError Classes
