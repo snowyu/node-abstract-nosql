@@ -13,8 +13,10 @@ module.exports.open = function (leveldown, test, testCommon) {
     db.open(function (err) {
         t.error(err)
         t.ok(db.isOpen())
+        t.ok(db.opened)
         db.close(function () {
           t.notOk(db.isOpen())
+          t.notOk(db.opened)
           t.end()
         })
       })
@@ -27,8 +29,10 @@ module.exports.open = function (leveldown, test, testCommon) {
     db.open({}, function (err) {
         t.error(err)
         t.ok(db.isOpen())
+        t.ok(db.opened)
         db.close(function () {
           t.notOk(db.isOpen())
+          t.notOk(db.opened)
           t.end()
         })
       })
@@ -51,6 +55,34 @@ module.exports.open = function (leveldown, test, testCommon) {
           })
         })
       })
+    })
+  })
+
+  test('test database open event', function (t) {
+    var db = leveldown(testCommon.location())
+    db.once("open", function(){
+      t.ok(db.isOpen())
+      t.ok(db.opened)
+      t.end()
+    })
+    db.open(function (err) {
+        t.error(err)
+        t.ok(db.isOpen())
+        t.ok(db.opened)
+    })
+  })
+
+  test('test database ready event', function (t) {
+    var db = leveldown(testCommon.location())
+    db.once("ready", function(){
+      t.ok(db.isOpen())
+      t.ok(db.opened)
+      t.end()
+    })
+    db.open(function (err) {
+        t.error(err)
+        t.ok(db.isOpen())
+        t.ok(db.opened)
     })
   })
 }

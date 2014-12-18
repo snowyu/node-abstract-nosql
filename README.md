@@ -29,11 +29,12 @@ You add functionality by implementing the underscore versions of the operations.
 Additionally, all methods provide argument checking and sensible defaults for optional arguments. All bad-argument errors are compatible with LevelDOWN (they pass the LevelDOWN method arguments tests). For example, if you call `.open()` without a callback argument you'll get an `Error('open() requires a callback argument')`. Where optional arguments are involved, your underscore methods will receive sensible defaults. A `.get(key, callback)` will pass through to a `._get(key, options, callback)` where the `options` argument is an empty object.
 
 
-## Changes
+## Changes(diference from abstract-leveldown)
 
-
++ !TODO: Add the stream ability
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
+* Add IteratorClass supports.
 + Add synchronous methods supports.
   * Add the synchronous methods support now. You can implement the synchronous methods only.
   * The asynchronous methods will be simulated via these synchronous methods. If you wanna
@@ -41,8 +42,14 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 + isExists/isExistsSync optional method to test key whether exists.
   * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
++ the AbstractNoSQL class supports events now.
+  * open/ready event after the database is opened.
+  * closed event after the database is closed.
++ isOpen()/opened to test the database whether opened.
 
 ## AbstractError Classes
+
+see [abstract-object](https://github.com/snowyu/abstract-object)
 
 ### AbstractError
 
@@ -84,6 +91,17 @@ the error codes:
 * NotOpenedError
 * InvalidTypeError
 * InvalidFormatError
+* OpenError
+* CloseError
+* AlreadyEndError
+
+
+```js
+var OpenError       = createError("CanNotOpen", 51)
+var CloseError      = createError("CanNotClose", 52)
+var AlreadyEndError = createError("AlreadyEnd", 53)
+```
+
 
 ## Example
 
@@ -135,6 +153,32 @@ FakeLevelDOWN.prototype._delSync = function (key, options) {
   delete this._store['_' + key]
   return true
 }
+
+//use it directly
+
+var db = new FakeLevelDOWN()
+
+//sync:
+db.put('foo', 'bar')
+var result = db.get('foo')
+
+//async:
+db.put('foo', 'bar', function (err) {
+  if (err) throw err
+  db.get('foo', function (err, value) {
+    if (err) throw err
+    console.log('Got foo =', value)
+    db.isExists('foo', function(err, isExists){
+      if (err) throw err
+      console.log('isExists foo =', isExists)
+    })
+  })
+})
+
+//stream:
+
+db.readStream().on('data', function(data){
+})
 
 // now use it in LevelUP
 
@@ -238,6 +282,55 @@ db.put('foo', 'bar', function (err) {
 
 See [MemDOWN](https://github.com/rvagg/memdown/) if you are looking for a complete in-memory replacement for LevelDOWN.
 
+## Streamable
+
+Once implements the AbstractIterator.\_nextSync() or AbstractIterator.\_next().
+the db should be the streamable.
+
+
+
+### AbstractLevelDOWN.createReadStream
+### AbstractLevelDOWN.readStream
+
+create a readable stream.
+
+* AbstractLevelDOWN.readStream([options])
+* AbstractLevelDOWN.createReadStream
+
+__arguments__
+
+* options: the optional options object
+  * `'next'` *()*: the raw key data to ensure the readStream return keys is greater than the key. See `'last'` event.
+    * note: this will affect the range[gt/gte or lt/lte(reverse)] options.
+  * `'filter'` *(function)*: to filter data in the stream
+    * function filter(key, value) if return:
+      *  0(.FILTER_INCLUDED): include this item
+      *  1(.FILTER_EXCLUDED): exclude
+      * -1(.FILTER_STOPPED): stop stream.
+    * note: the filter function argument 'key' and 'value' may be null, it is affected via keys and values of this options.
+  * `'range'` *(string or array)*: the keys are in the give range as the following format:
+    * string:
+      * "[a, b]": from a to b. a,b included. this means {gte='a', lte = 'b'}
+      * "(a, b]": from a to b. b included, a excluded. this means {gt='a', lte='b'}
+      * "[, b)"   from begining to b, begining included, b excluded. this means {lt='b'}
+      * note: this will affect the gt/gte/lt/lte options.
+    * array: the key list to get. eg, ['a', 'b', 'c']
+  * `'match'` *(string)*: use the minmatch to match the specified keys.
+    * Note: It will affect the range[gt/gte or lt/lte(reverse)] options maybe.
+  * `'limit'` *(number, default: `-1`)*: limit the number of results collected by this stream. This number represents a *maximum* number of results and may not be reached if you get to the end of the data first. A value of `-1` means there is no limit. When `reverse=true` the highest keys will be returned instead of the lowest keys.
+
+__return__
+
+* object: the read stream object
+
+
+#### Events
+
+the standard `'data'`, '`error'`, `'end'` and `'close'` events are emitted.
+the `'last'` event will be emitted when the last data arrived, the argument is the last raw key.
+if no more data the last key is `undefined`.
+
+
 ## Extensible API
 
 Remember that each of these methods, if you implement them, will receive exactly the number and order of arguments described. Optional arguments will be converted to sensible defaults.
@@ -248,6 +341,7 @@ Remember that each of these methods, if you implement them, will receive exactly
 
 ### AbstractLevelDOWN#_openSync(options)
 ### AbstractLevelDOWN#_getSync(key, options)
+### AbstractLevelDOWN#_isExistsSync(key, options)
 ### AbstractLevelDOWN#_putSync(key, value, options)
 ### AbstractLevelDOWN#_delSync(key, options)
 ### AbstractLevelDOWN#_batchSync(array, options)
@@ -257,6 +351,7 @@ Remember that each of these methods, if you implement them, will receive exactly
 ### AbstractLevelDOWN#_open(options, callback)
 ### AbstractLevelDOWN#_close(callback)
 ### AbstractLevelDOWN#_get(key, options, callback)
+### AbstractLevelDOWN#_isExists(key, options, callback)
 ### AbstractLevelDOWN#_put(key, value, options, callback)
 ### AbstractLevelDOWN#_del(key, options, callback)
 ### AbstractLevelDOWN#_batch(array, options, callback)
@@ -299,6 +394,20 @@ By default an `iterator()` operation returns a blank `AbstractIterator` object. 
 
 `AbstractIterator` implements the basic state management found in LevelDOWN. It keeps track of when a `next()` is in progress and when an `end()` has been called so it doesn't allow concurrent `next()` calls, it does it allow `end()` while a `next()` is in progress and it doesn't allow either `next()` or `end()` after `end()` has been called.
 
+__arguments__
+
+* options *(obeject)*: optional object with the following options:
+  * `'gt'` (greater than), `'gte'` (greater than or equal) define the lower bound of the range to be streamed. Only records where the key is greater than (or equal to) this option will be included in the range. When `reverse=true` the order will be reversed, but the records streamed will be the same.
+  * `'lt'` (less than), `'lte'` (less than or equal) define the higher bound of the range to be streamed. Only key/value pairs where the key is less than (or equal to) this option will be included in the range. When `reverse=true` the order will be reversed, but the records streamed will be the same.
+  * `'reverse'` *(boolean, default: `false`)*: a boolean, set true and the stream output will be reversed. Beware that due to the way LevelDB works, a reverse seek will be slower than a forward seek.
+  * `'keys'` *(boolean, default: `true`)*: whether contain keys.
+  * `'values'` *(boolean, default: `true`)*: whether contain values.
+  * `'limit'` *(number, default: `-1`)*: limit the number of results collected by this stream. This number represents a *maximum* number of results and may not be reached if you get to the end of the data first. A value of `-1` means there is no limit. When `reverse=true` the highest keys will be returned instead of the lowest keys.
+  * `'fillCache'` *(boolean, default: `false`)*: wheather LevelDB's LRU-cache should be filled with data read.
+
+
+
+
 ### AbstractIterator(db)
 
 Provided with the current instance of `AbstractLevelDOWN` by default.
@@ -310,8 +419,8 @@ Provided with the current instance of `AbstractLevelDOWN` by default.
 __return__
  
 * if any result: return a two elements of array
-  * the first is the key
-  * the second is the value
+  * the first is the key, the first element could be null or undefined if options.keys is false
+  * the second is the value, the second element could be null or undefined if options.values is false
 * or return false, if no any data yet.
 
 
@@ -346,6 +455,7 @@ See the [CONTRIBUTING.md](https://github.com/rvagg/node-levelup/blob/master/CONT
 Abstract LevelDOWN is only possible due to the excellent work of the following contributors:
 
 <table><tbody>
+<tr><th align="left">Riceball LEE</th><td><a href="https://github.com/snowyu">GitHub/snowyu</a></td><td>&nbsp;</td></tr>
 <tr><th align="left">Rod Vagg</th><td><a href="https://github.com/rvagg">GitHub/rvagg</a></td><td><a href="http://twitter.com/rvagg">Twitter/@rvagg</a></td></tr>
 <tr><th align="left">John Chesley</th><td><a href="https://github.com/chesles/">GitHub/chesles</a></td><td><a href="http://twitter.com/chesles">Twitter/@chesles</a></td></tr>
 <tr><th align="left">Jake Verbaten</th><td><a href="https://github.com/raynos">GitHub/raynos</a></td><td><a href="http://twitter.com/raynos2">Twitter/@raynos2</a></td></tr>
