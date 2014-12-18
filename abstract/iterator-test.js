@@ -122,6 +122,42 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
         , fn = function (err, key, value) {
             t.error(err)
             if (key && value) {
+              t.equal(key, data[idx].key, 'correct key')
+              t.equal(value, data[idx].value, 'correct value')
+              process.nextTick(next)
+              idx++
+            } else { // end
+              t.ok(typeof err === 'undefined', 'err argument is undefined')
+              t.ok(typeof key === 'undefined', 'key argument is undefined')
+              t.ok(typeof value === 'undefined', 'value argument is undefined')
+              t.equal(idx, data.length, 'correct number of entries')
+              iterator.end(function () {
+                t.end()
+              })
+            }
+          }
+        , next = function () {
+            iterator.next(fn)
+          }
+
+      next()
+    })
+  })
+
+  test('test simple iterator() asBuffer', function (t) {
+    var data = [
+            { type: 'put', key: 'foobatch1', value: 'bar1' }
+          , { type: 'put', key: 'foobatch2', value: 'bar2' }
+          , { type: 'put', key: 'foobatch3', value: 'bar3' }
+        ]
+      , idx = 0
+
+    db.batch(data, function (err) {
+      t.error(err)
+      var iterator = db.iterator({keyAsBuffer: true, valueAsBuffer: true})
+        , fn = function (err, key, value) {
+            t.error(err)
+            if (key && value) {
               t.ok(Buffer.isBuffer(key), 'key argument is a Buffer')
               t.ok(Buffer.isBuffer(value), 'value argument is a Buffer')
               t.equal(key.toString(), data[idx].key, 'correct key')

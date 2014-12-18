@@ -493,7 +493,7 @@ tap.test('test clear() extensibility', function (t) {
 
 tap.test('test iterator() extensibility', function (t) {
   var spy = sinon.spy()
-    , expectedOptions = { options: 1, reverse: false, keys: true, values: true, limit: -1, keyAsBuffer: true, valueAsBuffer: true }
+    , expectedOptions = { options: 1, reverse: false, keys: true, values: true, limit: -1, keyAsBuffer: false, valueAsBuffer: false }
     , test
 
   function Test (location) {
