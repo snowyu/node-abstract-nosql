@@ -31,7 +31,8 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes(diference from abstract-leveldown)
 
-+ !TODO: Add the stream ability
++ Add the stream ability
+  * this feature has moved to [nosql-stream](https://snowyu/nosql-stream) package.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
@@ -100,6 +101,53 @@ the error codes:
 var OpenError       = createError("CanNotOpen", 51)
 var CloseError      = createError("CanNotClose", 52)
 var AlreadyEndError = createError("AlreadyEnd", 53)
+```
+
+# Streamable
+
+see [nosql-stream](https://snowyu/nosql-stream) for more details 
+
+```js
+var MemDB = require("memdown-sync")
+var NoSQLStream = require("nosql-stream")
+var ReadStream = NoSQLStream.ReadStream
+var WriteStream = NoSQLStream.WriteStream
+
+
+var db1 = MemDB("db1")
+var db2 = MemDB("db2")
+
+var ws = WriteStream(db1)
+var ws2 = WriteStream(db2)
+
+ws.on('error', function (err) {
+  console.log('Oh my!', err)
+})
+ws.on('finish', function () {
+  console.log('Write Stream finish')
+  //read all data through the ReadStream
+  ReadStream(db1).on('data', function (data) {
+    console.log(data.key, '=', data.value)
+  })
+  .on('error', function (err) {
+    console.log('Oh my!', err)
+  })
+  .on('close', function () {
+    console.log('Stream closed')
+  })
+  .on('end', function () {
+    console.log('Stream closed')
+  })
+  .pipe(ws2) //copy Database db1 to db2:
+})
+
+ws.write({ key: 'name', value: 'Yuri Irsenovich Kim' })
+ws.write({ key: 'dob', value: '16 February 1941' })
+ws.write({ key: 'spouse', value: 'Kim Young-sook' })
+ws.write({ key: 'occupation', value: 'Clown' })
+ws.end()
+
+
 ```
 
 
