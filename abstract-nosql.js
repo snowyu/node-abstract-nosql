@@ -59,6 +59,9 @@
 
     AbstractNoSQL.prototype.isExistsSync = function(key, options) {
       var err, result;
+      if (options == null) {
+        options = {};
+      }
       if (this._isExistsSync) {
         result = this._isExistsSync(key, options);
         return result;
@@ -81,6 +84,9 @@
     AbstractNoSQL.prototype.getSync = function(key, options) {
       var result;
       if (this._getSync) {
+        if (options == null) {
+          options = {};
+        }
         result = this._getSync(key, options);
         return result;
       }
@@ -90,6 +96,9 @@
     AbstractNoSQL.prototype.putSync = function(key, value, options) {
       var result;
       if (this._putSync) {
+        if (options == null) {
+          options = {};
+        }
         result = this._putSync(key, value, options);
         return result;
       }
@@ -99,6 +108,9 @@
     AbstractNoSQL.prototype.delSync = function(key, options) {
       var result;
       if (this._delSync) {
+        if (options == null) {
+          options = {};
+        }
         result = this._delSync(key, options);
         return result;
       }
@@ -108,6 +120,9 @@
     AbstractNoSQL.prototype.batchSync = function(operations, options) {
       var result;
       if (this._batchSync) {
+        if (options == null) {
+          options = {};
+        }
         result = this._batchSync(operations, options);
         return result;
       }
@@ -126,6 +141,9 @@
     AbstractNoSQL.prototype.openSync = function(options) {
       var result;
       if (this._openSync) {
+        if (options == null) {
+          options = {};
+        }
         result = this._openSync(options);
         if (result) {
           this.setOpened(true);
@@ -379,6 +397,10 @@
       if (typeof options === "function") {
         callback = options;
         options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
       }
       if (!this._isBuffer(key)) {
         key = String(key);
@@ -422,6 +444,11 @@
       err = void 0;
       if (typeof options === "function") {
         callback = options;
+        options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
       }
       if (err = this._checkKey(key, "key", this._isBuffer)) {
         if (callback) {
@@ -436,9 +463,6 @@
       if ((value != null) && !this._isBuffer(value) && !process.browser) {
         value = String(value);
       }
-      if (typeof options !== "object") {
-        options = {};
-      }
       if (callback) {
         return this._put(key, value, options, callback);
       } else {
@@ -451,6 +475,11 @@
       err = void 0;
       if (typeof options === "function") {
         callback = options;
+        options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
       }
       if (err = this._checkKey(key, "key", this._isBuffer)) {
         if (callback) {
@@ -461,9 +490,6 @@
       }
       if (!this._isBuffer(key)) {
         key = String(key);
-      }
-      if (typeof options !== "object") {
-        options = {};
       }
       if (callback) {
         return this._del(key, options, callback);
@@ -479,6 +505,11 @@
       }
       if (typeof options === "function") {
         callback = options;
+        options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
       }
       if (typeof array === "function") {
         callback = array;
@@ -490,9 +521,6 @@
         } else {
           throw vError;
         }
-      }
-      if (!options || typeof options !== "object") {
-        options = {};
       }
       for (_i = 0, _len = array.length; _i < _len; _i++) {
         e = array[_i];

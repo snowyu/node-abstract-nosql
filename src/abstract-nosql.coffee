@@ -39,6 +39,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       
   #the optimal low-level sync functions:
   isExistsSync: (key, options) ->
+    options = {} unless options?
     if @_isExistsSync
       result = @_isExistsSync(key, options)
       return result
@@ -55,24 +56,28 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   getSync: (key, options) ->
     if @_getSync
+      options = {} unless options?
       result = @_getSync(key, options)
       return result
     throw new NotImplementedError()
 
   putSync: (key, value, options) ->
     if @_putSync
+      options = {} unless options?
       result = @_putSync(key, value, options)
       return result
     throw new NotImplementedError()
 
   delSync: (key, options) ->
     if @_delSync
+      options = {} unless options?
       result = @_delSync(key, options)
       return result
     throw new NotImplementedError()
 
   batchSync: (operations, options) ->
     if @_batchSync
+      options = {} unless options?
       result = @_batchSync(operations, options)
       return result
     throw new NotImplementedError()
@@ -85,6 +90,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   openSync: (options) ->
     if @_openSync
+      options = {} unless options?
       result = @_openSync(options)
       @setOpened true if result
       return result
@@ -289,6 +295,8 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     if typeof options is "function"
       callback = options
       options = {}
+    else
+      options = {} unless options?
     key = String(key)  unless @_isBuffer(key)
     if callback
       @_isExists key, options, callback
@@ -313,7 +321,11 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   put: (key, value, options, callback) ->
     err = undefined
-    callback = options  if typeof options is "function"
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
     if err = @_checkKey(key, "key", @_isBuffer)
       if callback
         return callback(err)
@@ -324,7 +336,6 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     # coerce value to string in node, don't touch it in browser
     # (indexeddb can store any JS type)
     value = String(value)  if value? and not @_isBuffer(value) and not process.browser
-    options = {}  unless typeof options is "object"
     if callback
       @_put key, value, options, callback
     else
@@ -332,14 +343,17 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   del: (key, options, callback) ->
     err = undefined
-    callback = options  if typeof options is "function"
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
     if err = @_checkKey(key, "key", @_isBuffer)
       if callback
         return callback(err)
       else
         throw err
     key = String(key)  unless @_isBuffer(key)
-    options = {}  unless typeof options is "object"
     if callback
       @_del key, options, callback
     else
@@ -347,7 +361,11 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   batch: (array, options, callback) ->
     return @_chainedBatch()  unless arguments.length
-    callback = options  if typeof options is "function"
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
     callback = array  if typeof array is "function"
     unless Array.isArray(array)
       vError = new Error("batch(array) requires an array argument")
@@ -355,7 +373,6 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
         return callback(vError)
       else
         throw vError
-    options = {}  if not options or typeof options isnt "object"
     for e in array
       continue unless typeof e is "object"
       if err = @_checkKey(e.type, "type", @_isBuffer)
