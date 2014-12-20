@@ -344,7 +344,21 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range: [50,]', function (t) {
+  test('test iterator with range keys: ["15", "03", "99"]', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: ["15", "03", "99"] }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 3, 'correct number of entries')
+      var all = sourceData.slice().map(transformSource)
+      var expected = []
+      expected[0] = all[15]
+      expected[1] = all[3]
+      expected[2] = all[99]
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range: "[50,]"', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[50, ]' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 50, 'correct number of entries')
@@ -354,7 +368,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range: [50,] and reverse=true', function (t) {
+  test('test iterator with range: "[50,]" and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[50, ]', reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 50, 'correct number of entries')
@@ -364,7 +378,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range: (50,]', function (t) {
+  test('test iterator with range: "(50,]"', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(50, ]' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 49, 'correct number of entries')
@@ -374,7 +388,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range: (50,] and reverse=true', function (t) {
+  test('test iterator with range: "(50,]" and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(50, ]', reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 49, 'correct number of entries')
@@ -384,7 +398,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with rang: [,50]', function (t) {
+  test('test iterator with rang: "[,50]"', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[,50]' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 51, 'correct number of entries')
@@ -394,7 +408,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range [,50.5] being a midway key and reverse=true', function (t) {
+  test('test iterator with range "[,50.5]" being a midway key and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[,50.5]', reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 51, 'correct number of entries')
@@ -413,7 +427,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range [30,70] and reverse=true', function (t) {
+  test('test iterator with range "[30,70]" and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"[30,70]", reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 41, 'correct number of entries')
@@ -423,7 +437,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range (30,70)', function (t) { 
+  test('test iterator with range "(30,70)"', function (t) { 
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(30,70)' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 41-2, 'correct number of entries')
@@ -433,7 +447,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range (30,70) and reverse=true', function (t) {
+  test('test iterator with range "(30,70)" and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"(30,70)", reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 41-2, 'correct number of entries')
@@ -443,7 +457,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range (30,70]', function (t) { 
+  test('test iterator with range "(30,70]"', function (t) { 
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(30,70]' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 41-1, 'correct number of entries')
@@ -453,7 +467,7 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
-  test('test iterator with range (30,70] and reverse=true', function (t) {
+  test('test iterator with range "(30,70]" and reverse=true', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"(30,70]", reverse: true }), function (err, data) {
       t.error(err)
       t.equal(data.length, 41-1, 'correct number of entries')
