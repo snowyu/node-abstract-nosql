@@ -33,7 +33,7 @@ Additionally, all methods provide argument checking and sensible defaults for op
 ## Changes(diference from abstract-leveldown)
 
 + Add the stream ability
-  * You should install [nosql-stream](https://snowyu/nosql-stream) package first to use this feature.
+  * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
@@ -105,185 +105,6 @@ var AlreadyEndError = createError("AlreadyEnd", 53)
 ```
 
 
-
-## Example
-
-A simplistic in-memory LevelDOWN replacement
-
-use sync methods:
-
-
-```js
-var util = require('util')
-  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
-
-// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
-function FakeLevelDOWN (location) {
-  AbstractLevelDOWN.call(this, location)
-}
-
-// our new prototype inherits from AbstractLevelDOWN
-util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
-
-// implement some methods
-
-FakeLevelDOWN.prototype._openSync = function (options) {
-  this._store = {}
-  return true
-}
-
-FakeLevelDOWN.prototype._putSync = function (key, value, options) {
-  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
-  this._store[key] = value
-  return true
-}
-
-//the isExists is an optional method:
-FakeLevelDOWN.prototype._isExistsSync = function (key, options) {
-  return this._store.hasOwnProperty('_' + key)
-}
-
-FakeLevelDOWN.prototype._getSync = function (key, options) {
-  var value = this._store['_' + key]
-  if (value === undefined) {
-    // 'NotFound' error, consistent with LevelDOWN API
-    throw new Error('NotFound')
-  }
-  return value
-}
-
-FakeLevelDOWN.prototype._delSync = function (key, options) {
-  delete this._store['_' + key]
-  return true
-}
-
-//use it directly
-
-var db = new FakeLevelDOWN()
-
-//sync:
-db.put('foo', 'bar')
-var result = db.get('foo')
-
-//async:
-db.put('foo', 'bar', function (err) {
-  if (err) throw err
-  db.get('foo', function (err, value) {
-    if (err) throw err
-    console.log('Got foo =', value)
-    db.isExists('foo', function(err, isExists){
-      if (err) throw err
-      console.log('isExists foo =', isExists)
-    })
-  })
-})
-
-//stream:
-
-db.readStream().on('data', function(data){
-})
-
-// now use it in LevelUP
-
-var levelup = require('levelup')
-
-var db = levelup('/who/cares/', {
-  // the 'db' option replaces LevelDOWN
-  db: function (location) { return new FakeLevelDOWN(location) }
-})
-
-//async:
-db.put('foo', 'bar', function (err) {
-  if (err) throw err
-  db.get('foo', function (err, value) {
-    if (err) throw err
-    console.log('Got foo =', value)
-    db.isExists('foo', function(err, isExists){
-      if (err) throw err
-      console.log('isExists foo =', isExists)
-    })
-  })
-})
-
-//sync:
-db.put('foo', 'bar')
-console.log(db.get('foo'))
-console.log(db.isExists('foo'))
-```
-
-use async methods(no sync supports):
-
-
-```js
-var util = require('util')
-  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
-
-// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
-function FakeLevelDOWN (location) {
-  AbstractLevelDOWN.call(this, location)
-}
-
-// our new prototype inherits from AbstractLevelDOWN
-util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
-
-// implement some methods
-
-FakeLevelDOWN.prototype._open = function (options, callback) {
-  // initialise a memory storage object
-  this._store = {}
-  // optional use of nextTick to be a nice async citizen
-  process.nextTick(function () { callback(null, this) }.bind(this))
-}
-
-FakeLevelDOWN.prototype._put = function (key, value, options, callback) {
-  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
-  this._store[key] = value
-  process.nextTick(callback)
-}
-
-//the isExists is an optional method:
-FakeLevelDOWN.prototype._isExists = function (key, options, callback) {
-  var value = this._store.hasOwnProperty('_' + key)
-  process.nextTick(function () {
-    callback(null, value)
-  })
-}
-
-FakeLevelDOWN.prototype._get = function (key, options, callback) {
-  var value = this._store['_' + key]
-  if (value === undefined) {
-    // 'NotFound' error, consistent with LevelDOWN API
-    return process.nextTick(function () { callback(new Error('NotFound')) })
-  }
-  process.nextTick(function () {
-    callback(null, value)
-  })
-}
-
-FakeLevelDOWN.prototype._del = function (key, options, callback) {
-  delete this._store['_' + key]
-  process.nextTick(callback)
-}
-
-// now use it in LevelUP
-
-var levelup = require('levelup')
-
-var db = levelup('/who/cares/', {
-  // the 'db' option replaces LevelDOWN
-  db: function (location) { return new FakeLevelDOWN(location) }
-})
-
-db.put('foo', 'bar', function (err) {
-  if (err) throw err
-  db.get('foo', function (err, value) {
-    if (err) throw err
-    console.log('Got foo =', value)
-  })
-})
-```
-
-See [MemDOWN](https://github.com/rvagg/memdown/) if you are looking for a complete in-memory replacement for LevelDOWN.
 
 ## Streamable
 
@@ -566,6 +387,186 @@ Provided with the current instance of `AbstractLevelDOWN` by default.
 ### AbstractChainedBatch#_del(key)
 ### AbstractChainedBatch#_clear()
 ### AbstractChainedBatch#_write(options, callback)
+
+## Example
+
+A simplistic in-memory LevelDOWN replacement
+
+use sync methods:
+
+
+```js
+var util = require('util')
+  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
+
+// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
+function FakeLevelDOWN (location) {
+  AbstractLevelDOWN.call(this, location)
+}
+
+// our new prototype inherits from AbstractLevelDOWN
+util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
+
+// implement some methods
+
+FakeLevelDOWN.prototype._openSync = function (options) {
+  this._store = {}
+  return true
+}
+
+FakeLevelDOWN.prototype._putSync = function (key, value, options) {
+  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
+  this._store[key] = value
+  return true
+}
+
+//the isExists is an optional method:
+FakeLevelDOWN.prototype._isExistsSync = function (key, options) {
+  return this._store.hasOwnProperty('_' + key)
+}
+
+FakeLevelDOWN.prototype._getSync = function (key, options) {
+  var value = this._store['_' + key]
+  if (value === undefined) {
+    // 'NotFound' error, consistent with LevelDOWN API
+    throw new Error('NotFound')
+  }
+  return value
+}
+
+FakeLevelDOWN.prototype._delSync = function (key, options) {
+  delete this._store['_' + key]
+  return true
+}
+
+//use it directly
+
+var db = new FakeLevelDOWN()
+
+//sync:
+db.put('foo', 'bar')
+var result = db.get('foo')
+
+//async:
+db.put('foo', 'bar', function (err) {
+  if (err) throw err
+  db.get('foo', function (err, value) {
+    if (err) throw err
+    console.log('Got foo =', value)
+    db.isExists('foo', function(err, isExists){
+      if (err) throw err
+      console.log('isExists foo =', isExists)
+    })
+  })
+})
+
+//stream:
+
+db.readStream().on('data', function(data){
+})
+
+// now use it in LevelUP
+
+var levelup = require('levelup')
+
+var db = levelup('/who/cares/', {
+  // the 'db' option replaces LevelDOWN
+  db: function (location) { return new FakeLevelDOWN(location) }
+})
+
+//async:
+db.put('foo', 'bar', function (err) {
+  if (err) throw err
+  db.get('foo', function (err, value) {
+    if (err) throw err
+    console.log('Got foo =', value)
+    db.isExists('foo', function(err, isExists){
+      if (err) throw err
+      console.log('isExists foo =', isExists)
+    })
+  })
+})
+
+//sync:
+db.put('foo', 'bar')
+console.log(db.get('foo'))
+console.log(db.isExists('foo'))
+```
+
+use async methods(no sync supports):
+
+
+```js
+var util = require('util')
+  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
+
+// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
+function FakeLevelDOWN (location) {
+  AbstractLevelDOWN.call(this, location)
+}
+
+// our new prototype inherits from AbstractLevelDOWN
+util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
+
+// implement some methods
+
+FakeLevelDOWN.prototype._open = function (options, callback) {
+  // initialise a memory storage object
+  this._store = {}
+  // optional use of nextTick to be a nice async citizen
+  process.nextTick(function () { callback(null, this) }.bind(this))
+}
+
+FakeLevelDOWN.prototype._put = function (key, value, options, callback) {
+  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
+  this._store[key] = value
+  process.nextTick(callback)
+}
+
+//the isExists is an optional method:
+FakeLevelDOWN.prototype._isExists = function (key, options, callback) {
+  var value = this._store.hasOwnProperty('_' + key)
+  process.nextTick(function () {
+    callback(null, value)
+  })
+}
+
+FakeLevelDOWN.prototype._get = function (key, options, callback) {
+  var value = this._store['_' + key]
+  if (value === undefined) {
+    // 'NotFound' error, consistent with LevelDOWN API
+    return process.nextTick(function () { callback(new Error('NotFound')) })
+  }
+  process.nextTick(function () {
+    callback(null, value)
+  })
+}
+
+FakeLevelDOWN.prototype._del = function (key, options, callback) {
+  delete this._store['_' + key]
+  process.nextTick(callback)
+}
+
+// now use it in LevelUP
+
+var levelup = require('levelup')
+
+var db = levelup('/who/cares/', {
+  // the 'db' option replaces LevelDOWN
+  db: function (location) { return new FakeLevelDOWN(location) }
+})
+
+db.put('foo', 'bar', function (err) {
+  if (err) throw err
+  db.get('foo', function (err, value) {
+    if (err) throw err
+    console.log('Got foo =', value)
+  })
+})
+```
+
+See [MemDOWN](https://github.com/rvagg/memdown/) if you are looking for a complete in-memory replacement for LevelDOWN.
+
 
 <a name="contributing"></a>
 Contributing
