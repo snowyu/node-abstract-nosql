@@ -215,6 +215,26 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     })
   })
 
+  test('test full data collection but skip first one', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, gt:null}), function (err, data) {
+      t.error(err)
+      t.equal(data.length, sourceData.length-1, 'correct number of entries')
+      var expected = sourceData.map(transformSource)
+      expected.splice(0,1)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+  test('test full data collection but skip first one with reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, lt:null, reverse: true}), function (err, data) {
+      t.error(err)
+      t.equal(data.length, sourceData.length-1, 'correct number of entries')
+      var expected = sourceData.slice().reverse().map(transformSource)
+      expected.splice(0,1)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
   test('test iterator with start=0', function (t) {
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, start: '00' }), function (err, data) {
       t.error(err)
@@ -320,6 +340,125 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
     collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, end: '0' }), function (err, data) {
       t.error(err)
       t.equal(data.length, 0, 'correct number of entries')
+      t.end()
+    })
+  })
+
+  test('test iterator with range: [50,]', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[50, ]' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 50, 'correct number of entries')
+      var expected = sourceData.slice(50).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range: [50,] and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[50, ]', reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 50, 'correct number of entries')
+      var expected = sourceData.slice().reverse().slice(0,50).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range: (50,]', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(50, ]' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 49, 'correct number of entries')
+      var expected = sourceData.slice(51).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range: (50,] and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(50, ]', reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 49, 'correct number of entries')
+      var expected = sourceData.slice().reverse().slice(0,49).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with rang: [,50]', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[,50]' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 51, 'correct number of entries')
+      var expected = sourceData.slice(0, 51).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range [,50.5] being a midway key and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[,50.5]', reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 51, 'correct number of entries')
+      var expected = sourceData.slice(0,51).reverse().map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+  test('test iterator with range [30,70]', function (t) { 
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '[30,70]' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41, 'correct number of entries')
+      var expected = sourceData.slice(30, 71).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range [30,70] and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"[30,70]", reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41, 'correct number of entries')
+      var expected = sourceData.slice().reverse().slice(29, 70).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range (30,70)', function (t) { 
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(30,70)' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41-2, 'correct number of entries')
+      var expected = sourceData.slice(31, 70).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range (30,70) and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"(30,70)", reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41-2, 'correct number of entries')
+      var expected = sourceData.slice(31,70).reverse().map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range (30,70]', function (t) { 
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range: '(30,70]' }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41-1, 'correct number of entries')
+      var expected = sourceData.slice(31, 71).map(transformSource)
+      t.deepEqual(data, expected)
+      t.end()
+    })
+  })
+
+  test('test iterator with range (30,70] and reverse=true', function (t) {
+    collectEntries(db.iterator({ keyAsBuffer: false, valueAsBuffer: false, range:"(30,70]", reverse: true }), function (err, data) {
+      t.error(err)
+      t.equal(data.length, 41-1, 'correct number of entries')
+      var expected = sourceData.slice(31,71).reverse().map(transformSource)
+      t.deepEqual(data, expected)
       t.end()
     })
   })

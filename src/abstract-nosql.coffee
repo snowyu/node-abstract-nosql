@@ -6,8 +6,6 @@ ReadStream            = NoSqlStream.ReadStream  if NoSqlStream
 WriteStream           = NoSqlStream.WriteStream if NoSqlStream
 AbstractObject        = require("abstract-object")
 util                  = require("abstract-object/lib/util")
-inherits              = util.inherits
-extend                = util._extend
 Errors                = require("./abstract-error")
 AbstractIterator      = require("./abstract-iterator")
 AbstractChainedBatch  = require("./abstract-chained-batch")
@@ -18,6 +16,8 @@ NotImplementedError   = Errors.NotImplementedError
 InvalidArgumentError  = Errors.InvalidArgumentError
 OpenError             = Errors.OpenError
 CloseError            = Errors.CloseError
+inherits              = util.inherits
+isString              = util.isString
 
 module.exports.AbstractNoSQL = class AbstractNoSQL
   inherits AbstractNoSQL, AbstractObject
@@ -95,7 +95,9 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   openSync: (options) ->
     if @_openSync
-      options = @_options unless options?
+      options = @_options || {} unless options?
+      options.createIfMissing = options.createIfMissing isnt false
+      options.errorIfExists = !!options.errorIfExists
       result = @_openSync(options)
       @setOpened true, options if result
       return result
@@ -271,7 +273,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   #
   open: (options, callback) ->
     callback = options  if typeof options is "function"
-    options = @_options unless typeof options is "object"
+    options = @_options || {} unless typeof options is "object"
     options.createIfMissing = options.createIfMissing isnt false
     options.errorIfExists = !!options.errorIfExists
     if callback
@@ -410,8 +412,31 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     options = xtend(options)
     ["start", "end", "gt", "gte", "lt", "lte"].forEach (o) ->
       delete options[o]  if options[o] and self._isBuffer(options[o]) and options[o].length is 0
-
     options.reverse = !!options.reverse
+
+    range = options.range
+    if isString(range)
+      range = range.trim()
+      if range.length >= 2
+        skipStart = if !options.reverse then range[0] is "(" else range[range.length-1] is ")"
+        skipEnd   = if !options.reverse then range[range.length-1] is ")" else range[0] is "("
+        range     = range.substring(1, range.length-1)
+        range     = range.split(",").map (item)->
+          item = item.trim()
+          item = null if item is ""
+          return item
+        if !options.reverse
+          [start,end] = range
+          startOp = 'gt'
+          endOp = 'lt'
+        else
+          [end, start] = range
+          startOp = 'lt'
+          endOp = 'gt'
+        startOp = startOp + 'e' unless skipStart
+        endOp = endOp + 'e' unless skipEnd
+        options[startOp] = start
+        options[endOp] = end
     options.keys = options.keys isnt false
     options.values = options.values isnt false
     options.limit = (if "limit" of options then options.limit else -1)
@@ -446,28 +471,24 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     !!@_opened
   readStream: (options, makeData)->
     if (ReadStream)
-      opt = extend({}, @_options)
-      opt = extend(opt, options)
+      opt = xtend(@_options, options)
       ReadStream @, opt, makeData
     else
       console.error "please `npm install nosql-stream` first"
   createReadStream: @::readStream
   valueStream: (options, makeData)->
-    opt = extend({}, @_options)
-    opt = extend(opt, options)
+    opt = xtend(options)
     opt.keys = false
     @readStream opt, makeData
   createValueStream: @::valueStream
   keyStream: (options, makeData)->
-    opt = extend({}, @_options)
-    opt = extend(opt, options)
+    opt = xtend(options)
     opt.values = false
     @readStream opt, makeData
   createKeyStream: @::keyStream
   writeStream: (options)->
     if (WriteStream)
-      opt = extend({}, @_options)
-      opt = extend(opt, options)
+      opt = xtend(@_options, options)
       WriteStream @, opt
     else
       console.error "please `npm install nosql-stream` first"
