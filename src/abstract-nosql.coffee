@@ -1,9 +1,13 @@
 # Copyright (c) 2013 Rod Vagg, MIT License
 # Copyright (c) 2014 Riceball LEE, MIT License
 xtend                 = require("xtend")
+try NoSqlStream       = require("nosql-stream")
+ReadStream            = NoSqlStream.ReadStream  if NoSqlStream
+WriteStream           = NoSqlStream.WriteStream if NoSqlStream
 AbstractObject        = require("abstract-object")
 util                  = require("abstract-object/lib/util")
 inherits              = util.inherits
+extend                = util._extend
 Errors                = require("./abstract-error")
 AbstractIterator      = require("./abstract-iterator")
 AbstractChainedBatch  = require("./abstract-chained-batch")
@@ -28,9 +32,10 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   @::__defineGetter__ "opened", ->
     !!@_opened
 
-  setOpened: (aValue)->
+  setOpened: (aValue, options)->
     if aValue
       @_opened = true
+      @_options = options if options
       @emit "ready"
       @emit "open"
     else
@@ -90,9 +95,9 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   openSync: (options) ->
     if @_openSync
-      options = {} unless options?
+      options = @_options unless options?
       result = @_openSync(options)
-      @setOpened true if result
+      @setOpened true, options if result
       return result
     throw new NotImplementedError()
 
@@ -266,15 +271,14 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   #
   open: (options, callback) ->
     callback = options  if typeof options is "function"
-    options = {}  unless typeof options is "object"
+    options = @_options unless typeof options is "object"
     options.createIfMissing = options.createIfMissing isnt false
     options.errorIfExists = !!options.errorIfExists
     if callback
       that = this
       @_open options, (err, result) ->
-        that.setOpened true if not err?
+        that.setOpened true, options if not err?
         callback err, result
-
     else
       @openSync options
 
@@ -440,6 +444,34 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   isOpen: ->
     !!@_opened
+  readStream: (options, makeData)->
+    if (ReadStream)
+      opt = extend({}, @_options)
+      opt = extend(opt, options)
+      ReadStream @, opt, makeData
+    else
+      console.error "please `npm install nosql-stream` first"
+  createReadStream: @::readStream
+  valueStream: (options, makeData)->
+    opt = extend({}, @_options)
+    opt = extend(opt, options)
+    opt.keys = false
+    @readStream opt, makeData
+  createValueStream: @::valueStream
+  keyStream: (options, makeData)->
+    opt = extend({}, @_options)
+    opt = extend(opt, options)
+    opt.values = false
+    @readStream opt, makeData
+  createKeyStream: @::keyStream
+  writeStream: (options)->
+    if (WriteStream)
+      opt = extend({}, @_options)
+      opt = extend(opt, options)
+      WriteStream @, opt
+    else
+      console.error "please `npm install nosql-stream` first"
+  createWriteStream: @::writeStream
 
 module.exports.AbstractLevelDOWN = AbstractNoSQL
 module.exports.AbstractIterator = AbstractIterator
