@@ -33,7 +33,7 @@ Additionally, all methods provide argument checking and sensible defaults for op
 ## Changes(diference from abstract-leveldown)
 
 + Add the stream ability
-  * You should install `[nosql-stream](https://snowyu/nosql-stream)` package first to use this feature.
+  * You should install [nosql-stream](https://snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
