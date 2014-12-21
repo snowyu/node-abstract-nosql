@@ -1,7 +1,7 @@
 {
   "name": "abstract-nosql",
-  "description": "An abstract prototype for nosql database(LevelDOWN API)",
-  "version": "1.6.1",
+  "description": "An abstract prototype for nosql database with sync and streamable (LevelDOWN API)",
+  "version": "1.7.0",
   "contributors": [
     "Riceball LEE <snowyu.lee@gmail.com> (https://github.com/snowyu)",
     "Rod Vagg <r@va.gg> (https://github.com/rvagg)",
@@ -32,7 +32,7 @@
     "leveldown",
     "levelup"
   ],
-  "main": "./abstract-leveldown.js",
+  "main": "./abstract-nosql.js",
   "dependencies": {
     "abstract-object": "~1.2.2",
     "xtend": "~3.0.0"
