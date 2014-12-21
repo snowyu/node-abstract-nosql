@@ -66,6 +66,20 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       return result
     throw new NotImplementedError()
 
+  mGetSync: (keys, options) ->
+    if @_mGetSync
+      options = {} unless options?
+      arr = @_mGetSync(key, options)
+      i = 0
+      result = []
+      while i < arr.length
+        result.push
+          key: arr[i]
+          value: arr[++i]
+        i++
+      return result
+    throw new NotImplementedError()
+
   putSync: (key, value, options) ->
     if @_putSync
       options = {} unless options?
@@ -173,6 +187,39 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
         else
           callback null, true
 
+  _mGetSync: (keys, options) ->
+    if @_getSync
+      result = []
+      for key in keys
+        value = @_getSync(key, options)
+        result.push key, value
+      return result
+    else
+      throw new NotImplementedError('_mGetSync: _getSync is not implemented.')
+
+  _mGet: (keys, options, callback) ->
+    that = this
+    if @_getSync
+      setImmediate ->
+        result = undefined
+        try
+          result = that._mGetSync(keys, options)
+        catch err
+          callback err
+          return
+        callback null, result
+    else if keys.length > 0
+      result = []
+      i = 0
+      readNext = (err, value)->
+        return callback(err) if err
+        result.push keys[i], value
+        i++
+        return callback(null, result) if i >= keys.length
+        @_get key[i], options, readNext
+      @_get keys[i], options, readNext
+    else
+      setImmediate callback
 
   _get: (key, options, callback) ->
     that = this
@@ -309,16 +356,40 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     else
       @isExistsSync key, options
 
+  mGet: (keys, options, callback) ->
+    err = undefined
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
+    if callback
+      @_mGet keys, options, (err, arr)->
+        return callback(err) if err
+        i = 0
+        result = []
+        while i < arr.length
+          result.push
+            key: arr[i]
+            value: arr[++i]
+          i++
+        callback null, result
+    else
+      @mGetSync keys, options
+
   get: (key, options, callback) ->
     err = undefined
-    callback = options  if typeof options is "function"
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
     if err = @_checkKey(key, "key", @_isBuffer)
       if callback
         return callback(err)
       else
         throw err
     key = String(key)  unless @_isBuffer(key)
-    options = {}  unless typeof options is "object"
     options.asBuffer = options.asBuffer isnt false
     if callback
       @_get key, options, callback
