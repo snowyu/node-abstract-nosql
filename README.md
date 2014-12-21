@@ -42,12 +42,19 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * The asynchronous methods will be simulated via these synchronous methods. If you wanna
   * support the asynchronous methods only, just do not implement these synchronous methods.
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
-+ isExists/isExistsSync optional method to test key whether exists.
++ Add isExists/isExistsSync optional method to test key whether exists.
   * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
 + the AbstractNoSQL class supports events now.
   * emit `'open'` and `'ready'` event after the database is opened.
   * emit `'closed'` event after the database is closed.
-+ isOpen()/opened to test the database whether opened.
++ Add isOpen()/opened to test the database whether opened.
++ Add mGetSync()/mGet() multi get keys method for the range(Array) option of the Iterator
+  * it will use the \_get/\_getSync method if no \_mGet or \_mGetSync implemented.
+  * Note: mGet/mGetSync return the array of object: [{key:key,value:value}, ...]
+    * But the \_mGet/\_mGetSync return the plain array: [key1, value1, key2, value2, ...]
++ Add Iterator.nextSync
+  * note: nextSync return the object: {key:key, value:value}, return false if ending.
+    * But the \_nextSync return the array: [key, value]
 
 ## AbstractError Classes
 
@@ -287,19 +294,51 @@ Remember that each of these methods, if you implement them, will receive exactly
 
 ## Sync Methods
 
+### AbstractLevelDOWN#_isExistsSync(key, options)
+
+this is an optional method for performance.
+
+### AbstractLevelDOWN#_mGetSync(keys, options)
+
+this is an optional method for performance.
+
+__arguments__
+
+* keys *(array)*: the keys array to get.
+* options *(object)*: the options for get.
+
+__return__
+
+* array: [key1, value1, key2, value2, ...]
+
 ### AbstractLevelDOWN#_openSync(options)
 ### AbstractLevelDOWN#_getSync(key, options)
-### AbstractLevelDOWN#_isExistsSync(key, options)
 ### AbstractLevelDOWN#_putSync(key, value, options)
 ### AbstractLevelDOWN#_delSync(key, options)
 ### AbstractLevelDOWN#_batchSync(array, options)
 
+
 ## Async Methods
+
+### AbstractLevelDOWN#_isExists(key, options, callback)
+
+this is an optional method for performance.
+
+### AbstractLevelDOWN#_mGet(keys, options, callback)
+
+this is an optional method for performance.
+
+__arguments__
+
+* keys *(array)*: the keys array to get.
+* options *(object)*: the options for get.
+* callback *(function)*: the callback function
+  * function(err, items)
+    * items: [key1, value1, key2, value2, ...]
 
 ### AbstractLevelDOWN#_open(options, callback)
 ### AbstractLevelDOWN#_close(callback)
 ### AbstractLevelDOWN#_get(key, options, callback)
-### AbstractLevelDOWN#_isExists(key, options, callback)
 ### AbstractLevelDOWN#_put(key, value, options, callback)
 ### AbstractLevelDOWN#_del(key, options, callback)
 ### AbstractLevelDOWN#_batch(array, options, callback)
