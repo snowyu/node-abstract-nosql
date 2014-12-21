@@ -120,20 +120,22 @@
         }
         this._nexting = false;
         return result;
+      } else {
+        throw new NotImplementedError();
       }
-      throw new NotImplementedError();
     };
 
     AbstractIterator.prototype.endSync = function() {
       if (this._indexOfKeys != null) {
-        this._resultOfKeys = null;
+        delete this._resultOfKeys;
         this._indexOfKeys = -2;
-        this._ended = true;
+        return this._ended = true;
       } else if (this._endSync) {
         this._ended = true;
         return this._endSync();
+      } else {
+        throw new NotImplementedError();
       }
-      throw new NotImplementedError();
     };
 
     AbstractIterator.prototype.next = function(callback) {
@@ -160,7 +162,7 @@
             self._indexOfKeys++;
             return self.next(callback);
           });
-          return;
+          return this;
         } else if (this._indexOfKeys >= 0 && this._indexOfKeys < this._resultOfKeys.length) {
           result = this._resultOfKeys.slice(this._indexOfKeys, this._indexOfKeys += 2);
           this._nexting = false;
@@ -169,18 +171,19 @@
         }
         this._nexting = false;
         if (result === false) {
-          return callback();
+          callback();
         } else {
-          return callback(void 0, result[0], result[1]);
+          callback(void 0, result[0], result[1]);
         }
       } else {
         this._nexting = true;
         self = this;
-        return this._next(function() {
+        this._next(function() {
           self._nexting = false;
           return callback.apply(null, arguments);
         });
       }
+      return this;
     };
 
     AbstractIterator.prototype.end = function(callback) {
@@ -192,7 +195,7 @@
       }
       if (this._indexOfKeys != null) {
         this._ended = true;
-        this._resultOfKeys = null;
+        delete this._resultOfKeys;
         this._indexOfKeys = -2;
         return setImmediate(callback);
       } else {

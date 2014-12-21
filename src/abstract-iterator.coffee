@@ -80,17 +80,19 @@ module.exports = class AbstractIterator
           value: result[1]
       @_nexting = false
       return result
-    throw new NotImplementedError()
+    else
+      throw new NotImplementedError()
 
   endSync: ->
     if @_indexOfKeys?
-      @_resultOfKeys = null
+      delete @_resultOfKeys
       @_indexOfKeys = -2
       @_ended = true
     else if @_endSync
       @_ended = true
       return @_endSync()
-    throw new NotImplementedError()
+    else
+      throw new NotImplementedError()
 
   next: (callback) ->
     throw new InvalidArgumentError("next() requires a callback argument") unless typeof callback is "function"
@@ -106,7 +108,7 @@ module.exports = class AbstractIterator
           self._resultOfKeys = arr
           self._indexOfKeys++
           self.next(callback)
-        return
+        return @
       else if @_indexOfKeys >= 0 and @_indexOfKeys < @_resultOfKeys.length
         result = @_resultOfKeys.slice(@_indexOfKeys, @_indexOfKeys+=2)
         @_nexting = false
@@ -123,13 +125,14 @@ module.exports = class AbstractIterator
       @_next ->
         self._nexting = false
         callback.apply null, arguments
+    @
 
   end: (callback) ->
     throw new InvalidArgumentError("end() requires a callback argument")  unless typeof callback is "function"
     return callback(new AlreadyEndError("end() already called on iterator"))  if @_ended
     if @_indexOfKeys?
       @_ended = true
-      @_resultOfKeys = null
+      delete @_resultOfKeys
       @_indexOfKeys = -2
       setImmediate callback
     else
