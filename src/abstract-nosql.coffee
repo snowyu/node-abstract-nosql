@@ -69,7 +69,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   mGetSync: (keys, options) ->
     if @_mGetSync
       options = {} unless options?
-      arr = @_mGetSync(key, options)
+      arr = @_mGetSync(keys, options)
       i = 0
       result = []
       while i < arr.length

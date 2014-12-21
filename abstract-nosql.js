@@ -116,7 +116,7 @@
         if (options == null) {
           options = {};
         }
-        arr = this._mGetSync(key, options);
+        arr = this._mGetSync(keys, options);
         i = 0;
         result = [];
         while (i < arr.length) {
