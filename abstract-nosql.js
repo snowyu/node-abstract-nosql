@@ -110,6 +110,27 @@
       throw new NotImplementedError();
     };
 
+    AbstractNoSQL.prototype.mGetSync = function(keys, options) {
+      var arr, i, result;
+      if (this._mGetSync) {
+        if (options == null) {
+          options = {};
+        }
+        arr = this._mGetSync(key, options);
+        i = 0;
+        result = [];
+        while (i < arr.length) {
+          result.push({
+            key: arr[i],
+            value: arr[++i]
+          });
+          i++;
+        }
+        return result;
+      }
+      throw new NotImplementedError();
+    };
+
     AbstractNoSQL.prototype.putSync = function(key, value, options) {
       var result;
       if (this._putSync) {
@@ -262,6 +283,57 @@
             return callback(null, true);
           }
         });
+      }
+    };
+
+    AbstractNoSQL.prototype._mGetSync = function(keys, options) {
+      var key, result, value, _i, _len;
+      if (this._getSync) {
+        result = [];
+        for (_i = 0, _len = keys.length; _i < _len; _i++) {
+          key = keys[_i];
+          value = this._getSync(key, options);
+          result.push(key, value);
+        }
+        return result;
+      } else {
+        throw new NotImplementedError('_mGetSync: _getSync is not implemented.');
+      }
+    };
+
+    AbstractNoSQL.prototype._mGet = function(keys, options, callback) {
+      var i, readNext, result, that;
+      that = this;
+      if (this._getSync) {
+        return setImmediate(function() {
+          var err, result;
+          result = void 0;
+          try {
+            result = that._mGetSync(keys, options);
+          } catch (_error) {
+            err = _error;
+            callback(err);
+            return;
+          }
+          return callback(null, result);
+        });
+      } else if (keys.length > 0) {
+        result = [];
+        i = 0;
+        readNext = function(err, value) {
+          if (err) {
+            return callback(err);
+          }
+          result.push(keys[i], value);
+          i++;
+          if (i >= keys.length) {
+            return callback(null, result);
+          }
+          return this._get(key[i], options, readNext);
+        };
+        return this._get(keys[i], options, readNext);
+      } else {
+        return setImmediate(callback);
       }
     };
 
@@ -431,11 +503,49 @@
       }
     };
 
+    AbstractNoSQL.prototype.mGet = function(keys, options, callback) {
+      var err;
+      err = void 0;
+      if (typeof options === "function") {
+        callback = options;
+        options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
+      }
+      if (callback) {
+        return this._mGet(keys, options, function(err, arr) {
+          var i, result;
+          if (err) {
+            return callback(err);
+          }
+          i = 0;
+          result = [];
+          while (i < arr.length) {
+            result.push({
+              key: arr[i],
+              value: arr[++i]
+            });
+            i++;
+          }
+          return callback(null, result);
+        });
+      } else {
+        return this.mGetSync(keys, options);
+      }
+    };
+
     AbstractNoSQL.prototype.get = function(key, options, callback) {
       var err;
       err = void 0;
       if (typeof options === "function") {
         callback = options;
+        options = {};
+      } else {
+        if (options == null) {
+          options = {};
+        }
       }
       if (err = this._checkKey(key, "key", this._isBuffer)) {
         if (callback) {
@@ -446,9 +556,6 @@
       }
       if (!this._isBuffer(key)) {
         key = String(key);
-      }
-      if (typeof options !== "object") {
-        options = {};
       }
       options.asBuffer = options.asBuffer !== false;
       if (callback) {
