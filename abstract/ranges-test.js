@@ -834,29 +834,10 @@ module.exports.iterator = function (leveldown, test, testCommon, collectEntries)
   )
 }
 
-module.exports.tearDown = function (test, testCommon) {
-  test('tearDown', function (t) {
-    db.close(testCommon.tearDown.bind(null, t))
-  })
-}
-
-module.exports.sync = function (Iterator, test) {
-  test('sync', function (t) {
-    if (Iterator.prototype._nextSync) {
-      delete Iterator.prototype._next
-    }
-    if (Iterator.prototype._endSync) {
-      delete Iterator.prototype._end
-    }
-    t.end()
-  })
-}
-
 module.exports.nextSync = function (leveldown, test, testCommon) {
   function collectEntries(iterator) {
     result = []
     while (item = iterator.nextSync()) {
-      console.log("next=",item)
       result.push(item)
     }
     return result
@@ -915,6 +896,24 @@ module.exports.nextSync = function (leveldown, test, testCommon) {
     expected[1] = all[3]
     expected[2] = all[99]
     t.deepEqual(data, expected)
+    t.end()
+  })
+}
+
+module.exports.tearDown = function (test, testCommon) {
+  test('tearDown', function (t) {
+    db.close(testCommon.tearDown.bind(null, t))
+  })
+}
+
+module.exports.sync = function (Iterator, test) {
+  test('sync', function (t) {
+    if (Iterator.prototype._nextSync) {
+      delete Iterator.prototype._next
+    }
+    if (Iterator.prototype._endSync) {
+      delete Iterator.prototype._end
+    }
     t.end()
   })
 }
