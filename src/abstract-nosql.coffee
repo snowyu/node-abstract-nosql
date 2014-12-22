@@ -69,6 +69,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   mGetSync: (keys, options) ->
     if @_mGetSync
       options = {} unless options?
+      options.raiseError = options.raiseError isnt false
       arr = @_mGetSync(keys, options)
       i = 0
       result = []
@@ -192,11 +193,13 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       result = []
       needKeyName = options.keys
       raiseError  = options.raiseError
+      options.asBuffer = options.asBuffer is true
       for key in keys
         try
           value = @_getSync(key, options)
         catch err
           throw err if raiseError
+          value = undefined
         if needKeyName isnt false
           result.push key, value
         else
@@ -207,16 +210,16 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
 
   _mGet: (keys, options, callback) ->
     that = this
-    if @_getSync
+    if @_getSync or @_mGetSync isnt AbstractNoSQL::_mGetSync
       setImmediate ->
         result = undefined
         try
-          result = that._mGetSync(keys, options)
+          result = that._mGetSync keys, options
         catch err
           callback err
           return
         callback null, result
-    else if keys.length > 0
+    else if keys.length > 0 and @_get
       result = []
       i = 0
       needKeyName = options.keys
@@ -231,7 +234,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
           result.push value
         i++
         return callback(null, result) if i >= keys.length
-        @_get key[i], options, readNext
+        that._get keys[i], options, readNext
       @_get keys[i], options, readNext
     else
       setImmediate callback
@@ -379,16 +382,21 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     else
       options = {} unless options?
     options.asBuffer = options.asBuffer is true
+    options.raiseError = options.raiseError isnt false
+    needKeyName = options.keys isnt false
     if callback
       @_mGet keys, options, (err, arr)->
         return callback(err) if err
-        i = 0
-        result = []
-        while i < arr.length
-          result.push
-            key: arr[i]
-            value: arr[++i]
-          i++
+        if needKeyName
+          i = 0
+          result = []
+          while i < arr.length
+            result.push
+              key: arr[i]
+              value: arr[++i]
+            i++
+        else
+          result = arr
         callback null, result
     else
       @mGetSync keys, options
@@ -494,6 +502,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     else
       @approximateSizeSync start, end
 
+  #TODO: move to Iterator.init
   _setupIteratorOptions: (options) ->
     self = this
     options = xtend(options)

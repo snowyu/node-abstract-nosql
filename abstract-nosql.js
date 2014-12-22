@@ -116,6 +116,7 @@
         if (options == null) {
           options = {};
         }
+        options.raiseError = options.raiseError !== false;
         arr = this._mGetSync(keys, options);
         i = 0;
         result = [];
@@ -287,13 +288,28 @@
     };
 
     AbstractNoSQL.prototype._mGetSync = function(keys, options) {
-      var key, result, value, _i, _len;
+      var err, key, needKeyName, raiseError, result, value, _i, _len;
       if (this._getSync) {
         result = [];
+        needKeyName = options.keys;
+        raiseError = options.raiseError;
+        options.asBuffer = options.asBuffer === true;
         for (_i = 0, _len = keys.length; _i < _len; _i++) {
           key = keys[_i];
-          value = this._getSync(key, options);
-          result.push(key, value);
+          try {
+            value = this._getSync(key, options);
+          } catch (_error) {
+            err = _error;
+            if (raiseError) {
+              throw err;
+            }
+            value = void 0;
+          }
+          if (needKeyName !== false) {
+            result.push(key, value);
+          } else {
+            result.push(value);
+          }
         }
         return result;
       } else {
@@ -302,9 +318,9 @@
     };
 
     AbstractNoSQL.prototype._mGet = function(keys, options, callback) {
-      var i, readNext, result, that;
+      var i, needKeyName, raiseError, readNext, result, that;
       that = this;
-      if (this._getSync) {
+      if (this._getSync || this._mGetSync !== AbstractNoSQL.prototype._mGetSync) {
         return setImmediate(function() {
           var err, result;
           result = void 0;
@@ -317,19 +333,25 @@
           }
           return callback(null, result);
         });
-      } else if (keys.length > 0) {
+      } else if (keys.length > 0 && this._get) {
         result = [];
         i = 0;
+        needKeyName = options.keys;
+        raiseError = options.raiseError;
         readNext = function(err, value) {
-          if (err) {
+          if (err && raiseError) {
             return callback(err);
           }
-          result.push(keys[i], value);
+          if (needKeyName !== false) {
+            result.push(keys[i], value);
+          } else {
+            result.push(value);
+          }
           i++;
           if (i >= keys.length) {
             return callback(null, result);
           }
-          return this._get(key[i], options, readNext);
+          return that._get(keys[i], options, readNext);
         };
         return this._get(keys[i], options, readNext);
       } else {
@@ -504,7 +526,7 @@
     };
 
     AbstractNoSQL.prototype.mGet = function(keys, options, callback) {
-      var err;
+      var err, needKeyName;
       err = void 0;
       if (typeof options === "function") {
         callback = options;
@@ -514,20 +536,27 @@
           options = {};
         }
       }
+      options.asBuffer = options.asBuffer === true;
+      options.raiseError = options.raiseError !== false;
+      needKeyName = options.keys !== false;
       if (callback) {
         return this._mGet(keys, options, function(err, arr) {
           var i, result;
           if (err) {
             return callback(err);
           }
-          i = 0;
-          result = [];
-          while (i < arr.length) {
-            result.push({
-              key: arr[i],
-              value: arr[++i]
-            });
-            i++;
+          if (needKeyName) {
+            i = 0;
+            result = [];
+            while (i < arr.length) {
+              result.push({
+                key: arr[i],
+                value: arr[++i]
+              });
+              i++;
+            }
+          } else {
+            result = arr;
           }
           return callback(null, result);
         });
