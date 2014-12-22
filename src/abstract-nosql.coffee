@@ -190,9 +190,17 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   _mGetSync: (keys, options) ->
     if @_getSync
       result = []
+      needKeyName = options.keys
+      raiseError  = options.raiseError
       for key in keys
-        value = @_getSync(key, options)
-        result.push key, value
+        try
+          value = @_getSync(key, options)
+        catch err
+          throw err if raiseError
+        if needKeyName isnt false
+          result.push key, value
+        else
+          result.push value
       return result
     else
       throw new NotImplementedError('_mGetSync: _getSync is not implemented.')
@@ -211,9 +219,16 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     else if keys.length > 0
       result = []
       i = 0
+      needKeyName = options.keys
+      raiseError  = options.raiseError
+
       readNext = (err, value)->
-        return callback(err) if err
-        result.push keys[i], value
+        return callback(err) if err and raiseError
+
+        if needKeyName isnt false
+          result.push keys[i], value
+        else
+          result.push value
         i++
         return callback(null, result) if i >= keys.length
         @_get key[i], options, readNext
@@ -363,6 +378,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       options = {}
     else
       options = {} unless options?
+    options.asBuffer = options.asBuffer is true
     if callback
       @_mGet keys, options, (err, arr)->
         return callback(err) if err

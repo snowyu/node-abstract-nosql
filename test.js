@@ -28,6 +28,9 @@ require('./abstract/isExists-test').args(tap.test)
 require('./abstract/get-test').setUp(factory, tap.test, testCommon)
 require('./abstract/get-test').args(tap.test)
 
+require('./abstract/mget-test').setUp(factory, tap.test, testCommon)
+require('./abstract/mget-test').args(tap.test)
+
 require('./abstract/put-test').setUp(factory, tap.test, testCommon)
 require('./abstract/put-test').args(tap.test)
 
@@ -156,6 +159,44 @@ tap.test('test get() extensibility', function (t) {
 
   t.equal(spy.callCount, 2, 'got _get() call')
   t.equal(spy.getCall(1).thisValue, test, '`this` on _get() was correct')
+  t.equal(spy.getCall(1).args.length, 3, 'got three arguments')
+  t.equal(spy.getCall(1).args[0], expectedKey, 'got expected key argument')
+  t.deepEqual(spy.getCall(1).args[1], expectedOptions, 'got expected options argument')
+  t.equal(spy.getCall(1).args[2], expectedCb, 'got expected cb argument')
+  t.end()
+})
+
+tap.test('test mGet() extensibility', function (t) {
+  var spy = sinon.spy()
+    , expectedCb = function () {}
+    , expectedOptions = { asBuffer: false }
+    , expectedKey = ['a key']
+    , test
+
+  function Test (location) {
+    AbstractLevelDOWN.call(this, location)
+  }
+
+  util.inherits(Test, AbstractLevelDOWN)
+
+  Test.prototype._mGet = spy
+
+  test = new Test('foobar')
+  test.get(expectedKey, expectedCb)
+
+  t.equal(spy.callCount, 1, 'got _mGet() call')
+  t.equal(spy.getCall(0).thisValue, test, '`this` on _mGet() was correct')
+  t.equal(spy.getCall(0).args.length, 3, 'got three arguments')
+  t.equal(spy.getCall(0).args[0], expectedKey, 'got expected key argument')
+  t.deepEqual(spy.getCall(0).args[1], expectedOptions, 'got default options argument')
+  t.equal(spy.getCall(0).args[2], expectedCb, 'got expected cb argument')
+
+  test.get(expectedKey, { options: 1 }, expectedCb)
+
+  expectedOptions.options = 1
+
+  t.equal(spy.callCount, 2, 'got _mGet() call')
+  t.equal(spy.getCall(1).thisValue, test, '`this` on _mGet() was correct')
   t.equal(spy.getCall(1).args.length, 3, 'got three arguments')
   t.equal(spy.getCall(1).args[0], expectedKey, 'got expected key argument')
   t.deepEqual(spy.getCall(1).args[1], expectedOptions, 'got expected options argument')

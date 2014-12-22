@@ -52,6 +52,10 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * it will use the \_get/\_getSync method if no \_mGet or \_mGetSync implemented.
   * Note: mGet/mGetSync return the array of object: [{key:key,value:value}, ...]
     * But the \_mGet/\_mGetSync return the plain array: [key1, value1, key2, value2, ...]
+    + keys *(bool, default true)* option to return keys or not
+      * return the values array if keys is false
+    + raiseError *(bool, default true)* option to raise or ignore error
+      * some elements will be undefined for the value error if keys is false
 + Add Iterator.nextSync
   * note: nextSync return the object: {key:key, value:value}, return false if ending.
     * But the \_nextSync return the array: [key, value]
