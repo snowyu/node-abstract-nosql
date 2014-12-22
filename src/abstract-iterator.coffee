@@ -13,12 +13,17 @@ AlreadyRunError       = Errors.AlreadyRunError
 module.exports = class AbstractIterator
   @AlreadyEndError: AlreadyEndError
   @AlreadyRunError: AlreadyRunError
+
   constructor: (@db, @options) ->
     @_ended = false
     @_nexting = false
-    if options and isArray options.range
+
+    isKeysIterator = options and isArray options.range
+    if isKeysIterator
       @_resultOfKeys = options.range
       @_indexOfKeys = -1
+
+    return not isKeysIterator
 
   _next: (callback) ->
     self = this
@@ -55,22 +60,25 @@ module.exports = class AbstractIterator
         callback()
 
 
+  nextKeysSync: ->
+    @_nexting = true
+    if @_indexOfKeys is -1
+      @_resultOfKeys = @db._mGetSync @_resultOfKeys, @options
+      @_indexOfKeys++
+    result = @_indexOfKeys >= 0 and @_indexOfKeys < @_resultOfKeys.length
+    if result
+      result =
+        key: @_resultOfKeys[@_indexOfKeys]
+        value: @_resultOfKeys[++@_indexOfKeys]
+      @_indexOfKeys++
+    @_nexting = false
+    return result
+
   nextSync: ->
     return throw new AlreadyEndError("cannot call next() after end()") if @_ended
     return throw new AlreadyRunError("cannot call next() before previous next() has completed") if @_nexting
     if @_indexOfKeys?
-      @_nexting = true
-      if @_indexOfKeys is -1
-        @_resultOfKeys = @db._mGetSync @_resultOfKeys, @options
-        @_indexOfKeys++
-      result = @_indexOfKeys >= 0 and @_indexOfKeys < @_resultOfKeys.length
-      if result
-        result =
-          key: @_resultOfKeys[@_indexOfKeys]
-          value: @_resultOfKeys[++@_indexOfKeys]
-        @_indexOfKeys++
-      @_nexting = false
-      return result
+      return @nextKeysSync()
     else if @_nextSync
       @_nexting = true
       result = @_nextSync()
@@ -83,42 +91,49 @@ module.exports = class AbstractIterator
     else
       throw new NotImplementedError()
 
+  _endKeys: ->
+    delete @_resultOfKeys
+    @_indexOfKeys = -2
+    @_ended = true
+
   endSync: ->
     if @_indexOfKeys?
-      delete @_resultOfKeys
-      @_indexOfKeys = -2
-      @_ended = true
+      return @_endKeys()
     else if @_endSync
       @_ended = true
       return @_endSync()
     else
       throw new NotImplementedError()
 
+  nextKeys: (callback) ->
+    @_nexting = true
+    if @_indexOfKeys is -1
+      self = this
+      @db._mGet @_resultOfKeys, @options, (err, arr)->
+        self._nexting = false
+        return callback(err) if err
+        self._resultOfKeys = arr
+        self._indexOfKeys++
+        self.next(callback)
+      return @
+    else if @_indexOfKeys >= 0 and @_indexOfKeys < @_resultOfKeys.length
+      result = @_resultOfKeys.slice(@_indexOfKeys, @_indexOfKeys+=2)
+      @_nexting = false
+    else
+      result = false
+    @_nexting = false
+    if result is false
+      callback()
+    else
+      callback(undefined, result[0], result[1])
+    @
+
   next: (callback) ->
     throw new InvalidArgumentError("next() requires a callback argument") unless typeof callback is "function"
     return callback(new AlreadyEndError("cannot call next() after end()")) if @_ended
     return callback(new AlreadyRunError("cannot call next() before previous next() has completed")) if @_nexting
     if @_indexOfKeys?
-      @_nexting = true
-      if @_indexOfKeys is -1
-        self = this
-        @db._mGet @_resultOfKeys, @options, (err, arr)->
-          self._nexting = false
-          return callback(err) if err
-          self._resultOfKeys = arr
-          self._indexOfKeys++
-          self.next(callback)
-        return @
-      else if @_indexOfKeys >= 0 and @_indexOfKeys < @_resultOfKeys.length
-        result = @_resultOfKeys.slice(@_indexOfKeys, @_indexOfKeys+=2)
-        @_nexting = false
-      else
-        result = false
-      @_nexting = false
-      if result is false
-        callback()
-      else
-        callback(undefined, result[0], result[1])
+      @nextKeys callback
     else
       @_nexting = true
       self = this
@@ -131,9 +146,7 @@ module.exports = class AbstractIterator
     throw new InvalidArgumentError("end() requires a callback argument")  unless typeof callback is "function"
     return callback(new AlreadyEndError("end() already called on iterator"))  if @_ended
     if @_indexOfKeys?
-      @_ended = true
-      delete @_resultOfKeys
-      @_indexOfKeys = -2
+      @_endKeys()
       setImmediate callback
     else
       @_ended = true

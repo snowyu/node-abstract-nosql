@@ -26,14 +26,17 @@
     AbstractIterator.AlreadyRunError = AlreadyRunError;
 
     function AbstractIterator(db, options) {
+      var isKeysIterator;
       this.db = db;
       this.options = options;
       this._ended = false;
       this._nexting = false;
-      if (options && isArray(options.range)) {
+      isKeysIterator = options && isArray(options.range);
+      if (isKeysIterator) {
         this._resultOfKeys = options.range;
         this._indexOfKeys = -1;
       }
+      return !isKeysIterator;
     }
 
     AbstractIterator.prototype._next = function(callback) {
@@ -85,6 +88,25 @@
       }
     };
 
+    AbstractIterator.prototype.nextKeysSync = function() {
+      var result;
+      this._nexting = true;
+      if (this._indexOfKeys === -1) {
+        this._resultOfKeys = this.db._mGetSync(this._resultOfKeys, this.options);
+        this._indexOfKeys++;
+      }
+      result = this._indexOfKeys >= 0 && this._indexOfKeys < this._resultOfKeys.length;
+      if (result) {
+        result = {
+          key: this._resultOfKeys[this._indexOfKeys],
+          value: this._resultOfKeys[++this._indexOfKeys]
+        };
+        this._indexOfKeys++;
+      }
+      this._nexting = false;
+      return result;
+    };
+
     AbstractIterator.prototype.nextSync = function() {
       var result;
       if (this._ended) {
@@ -94,21 +116,7 @@
         throw new AlreadyRunError("cannot call next() before previous next() has completed");
       }
       if (this._indexOfKeys != null) {
-        this._nexting = true;
-        if (this._indexOfKeys === -1) {
-          this._resultOfKeys = this.db._mGetSync(this._resultOfKeys, this.options);
-          this._indexOfKeys++;
-        }
-        result = this._indexOfKeys >= 0 && this._indexOfKeys < this._resultOfKeys.length;
-        if (result) {
-          result = {
-            key: this._resultOfKeys[this._indexOfKeys],
-            value: this._resultOfKeys[++this._indexOfKeys]
-          };
-          this._indexOfKeys++;
-        }
-        this._nexting = false;
-        return result;
+        return this.nextKeysSync();
       } else if (this._nextSync) {
         this._nexting = true;
         result = this._nextSync();
@@ -125,11 +133,15 @@
       }
     };
 
+    AbstractIterator.prototype._endKeys = function() {
+      delete this._resultOfKeys;
+      this._indexOfKeys = -2;
+      return this._ended = true;
+    };
+
     AbstractIterator.prototype.endSync = function() {
       if (this._indexOfKeys != null) {
-        delete this._resultOfKeys;
-        this._indexOfKeys = -2;
-        return this._ended = true;
+        return this._endKeys();
       } else if (this._endSync) {
         this._ended = true;
         return this._endSync();
@@ -138,8 +150,38 @@
       }
     };
 
-    AbstractIterator.prototype.next = function(callback) {
+    AbstractIterator.prototype.nextKeys = function(callback) {
       var result, self;
+      this._nexting = true;
+      if (this._indexOfKeys === -1) {
+        self = this;
+        this.db._mGet(this._resultOfKeys, this.options, function(err, arr) {
+          self._nexting = false;
+          if (err) {
+            return callback(err);
+          }
+          self._resultOfKeys = arr;
+          self._indexOfKeys++;
+          return self.next(callback);
+        });
+        return this;
+      } else if (this._indexOfKeys >= 0 && this._indexOfKeys < this._resultOfKeys.length) {
+        result = this._resultOfKeys.slice(this._indexOfKeys, this._indexOfKeys += 2);
+        this._nexting = false;
+      } else {
+        result = false;
+      }
+      this._nexting = false;
+      if (result === false) {
+        callback();
+      } else {
+        callback(void 0, result[0], result[1]);
+      }
+      return this;
+    };
+
+    AbstractIterator.prototype.next = function(callback) {
+      var self;
       if (typeof callback !== "function") {
         throw new InvalidArgumentError("next() requires a callback argument");
       }
@@ -150,31 +192,7 @@
         return callback(new AlreadyRunError("cannot call next() before previous next() has completed"));
       }
       if (this._indexOfKeys != null) {
-        this._nexting = true;
-        if (this._indexOfKeys === -1) {
-          self = this;
-          this.db._mGet(this._resultOfKeys, this.options, function(err, arr) {
-            self._nexting = false;
-            if (err) {
-              return callback(err);
-            }
-            self._resultOfKeys = arr;
-            self._indexOfKeys++;
-            return self.next(callback);
-          });
-          return this;
-        } else if (this._indexOfKeys >= 0 && this._indexOfKeys < this._resultOfKeys.length) {
-          result = this._resultOfKeys.slice(this._indexOfKeys, this._indexOfKeys += 2);
-          this._nexting = false;
-        } else {
-          result = false;
-        }
-        this._nexting = false;
-        if (result === false) {
-          callback();
-        } else {
-          callback(void 0, result[0], result[1]);
-        }
+        this.nextKeys(callback);
       } else {
         this._nexting = true;
         self = this;
@@ -194,9 +212,7 @@
         return callback(new AlreadyEndError("end() already called on iterator"));
       }
       if (this._indexOfKeys != null) {
-        this._ended = true;
-        delete this._resultOfKeys;
-        this._indexOfKeys = -2;
+        this._endKeys();
         return setImmediate(callback);
       } else {
         this._ended = true;
