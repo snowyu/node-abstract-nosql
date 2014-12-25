@@ -32,6 +32,7 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes(diference from abstract-leveldown)
 
+- Remove the AbstractIterator to [nosql-stream](https://github.com/snowyu/nosql-stream) package
 + Add the stream ability
   * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
@@ -126,33 +127,33 @@ Once implements the AbstractIterator:
 
 the db should be the streamable.
 
-But, you should install the [nosql-stream](https://snowyu/nosql-stream) package first.
+But, you should install the [nosql-stream](https://github.com/snowyu/nosql-stream) package first.
 
     npm install nosql-stream
 
-see [nosql-stream](https://snowyu/nosql-stream) for more details 
+see [nosql-stream](https://snowyu/github.com/nosql-stream) for more details 
 
 
-### AbstractLevelDOWN.keyStream(createKeyStream)
+### AbstractNoSql.keyStream(createKeyStream)
 
 create a readable stream.
 
 the data item is key.
 
-### AbstractLevelDOWN.valueStream(createValueStream)
+### AbstractNoSql.valueStream(createValueStream)
 
 create a readable stream.
 
 the data item is value.
 
-### AbstractLevelDOWN.readStream(createReadStream)
+### AbstractNoSql.readStream(createReadStream)
 
 create a readable stream.
 
 the data item is an object: {key:key, value:value}.
 
-* AbstractLevelDOWN.readStream([options])
-* AbstractLevelDOWN.createReadStream
+* AbstractNoSql.readStream([options])
+* AbstractNoSql.createReadStream
 
 __arguments__
 
@@ -294,15 +295,15 @@ nextPage(db, lastKey, 10, dataCallback);
 
 Remember that each of these methods, if you implement them, will receive exactly the number and order of arguments described. Optional arguments will be converted to sensible defaults.
 
-### AbstractLevelDOWN(location)
+### AbstractNoSql(location)
 
 ## Sync Methods
 
-### AbstractLevelDOWN#_isExistsSync(key, options)
+### AbstractNoSql#_isExistsSync(key, options)
 
 this is an optional method for performance.
 
-### AbstractLevelDOWN#_mGetSync(keys, options)
+### AbstractNoSql#_mGetSync(keys, options)
 
 this is an optional method for performance.
 
@@ -315,20 +316,20 @@ __return__
 
 * array: [key1, value1, key2, value2, ...]
 
-### AbstractLevelDOWN#_openSync(options)
-### AbstractLevelDOWN#_getSync(key, options)
-### AbstractLevelDOWN#_putSync(key, value, options)
-### AbstractLevelDOWN#_delSync(key, options)
-### AbstractLevelDOWN#_batchSync(array, options)
+### AbstractNoSql#_openSync(options)
+### AbstractNoSql#_getSync(key, options)
+### AbstractNoSql#_putSync(key, value, options)
+### AbstractNoSql#_delSync(key, options)
+### AbstractNoSql#_batchSync(array, options)
 
 
 ## Async Methods
 
-### AbstractLevelDOWN#_isExists(key, options, callback)
+### AbstractNoSql#_isExists(key, options, callback)
 
 this is an optional method for performance.
 
-### AbstractLevelDOWN#_mGet(keys, options, callback)
+### AbstractNoSql#_mGet(keys, options, callback)
 
 this is an optional method for performance.
 
@@ -340,12 +341,12 @@ __arguments__
   * function(err, items)
     * items: [key1, value1, key2, value2, ...]
 
-### AbstractLevelDOWN#_open(options, callback)
-### AbstractLevelDOWN#_close(callback)
-### AbstractLevelDOWN#_get(key, options, callback)
-### AbstractLevelDOWN#_put(key, value, options, callback)
-### AbstractLevelDOWN#_del(key, options, callback)
-### AbstractLevelDOWN#_batch(array, options, callback)
+### AbstractNoSql#_open(options, callback)
+### AbstractNoSql#_close(callback)
+### AbstractNoSql#_get(key, options, callback)
+### AbstractNoSql#_put(key, value, options, callback)
+### AbstractNoSql#_del(key, options, callback)
+### AbstractNoSql#_batch(array, options, callback)
 
 If `batch()` is called without argument or with only an options object then it should return a `Batch` object with chainable methods. Otherwise it will invoke a classic batch operation.
 
@@ -368,18 +369,18 @@ db.batch(ops, function (err) {
 })
 ```
 
-### AbstractLevelDOWN#_chainedBatch()
+### AbstractNoSql#_chainedBatch()
 
 By default an `batch()` operation without argument returns a blank `AbstractChainedBatch` object. The prototype is available on the main exports for you to extend. If you want to implement chainable batch operations then you should extend the `AbstractChaindBatch` and return your object in the `_chainedBatch()` method.
 
-### AbstractLevelDOWN#_approximateSize(start, end, callback)
+### AbstractNoSql#_approximateSize(start, end, callback)
 
-### AbstractLevelDOWN#IteratorClass
+### AbstractNoSql#IteratorClass
 
 You can override the `IteratorClass` to your Iterator.
 After override this, it is not necessary to implement the `"_iterator()"` method.
 
-### AbstractLevelDOWN#_iterator(options)
+### AbstractNoSql#_iterator(options)
 
 By default an `iterator()` operation returns a blank `AbstractIterator` object. The prototype is available on the main exports for you to extend. If you want to implement iterator operations then you should extend the `AbstractIterator` and return your object in the `_iterator(options)` method.
 
@@ -397,34 +398,9 @@ __arguments__
   * `'fillCache'` *(boolean, default: `false`)*: wheather LevelDB's LRU-cache should be filled with data read.
 
 
-
-
-### AbstractIterator(db)
-
-Provided with the current instance of `AbstractLevelDOWN` by default.
-
-### Sync methods:
-
-#### AbstractIterator#_nextSync()
-
-__return__
- 
-* if any result: return a two elements of array
-  * the first is the key, the first element could be null or undefined if options.keys is false
-  * the second is the value, the second element could be null or undefined if options.values is false
-* or return false, if no any data yet.
-
-
-#### AbstractIterator#_endSync()
-
-### Async methods:
-
-#### AbstractIterator#_next(callback)
-#### AbstractIterator#_end(callback)
-
 ### AbstractChainedBatch
 
-Provided with the current instance of `AbstractLevelDOWN` by default.
+Provided with the current instance of `AbstractNoSql` by default.
 
 ### AbstractChainedBatch#_put(key, value)
 ### AbstractChainedBatch#_del(key)
@@ -440,35 +416,35 @@ use sync methods:
 
 ```js
 var util = require('util')
-  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
+  , AbstractNoSql = require('./').AbstractNoSql
 
-// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
-function FakeLevelDOWN (location) {
-  AbstractLevelDOWN.call(this, location)
+// constructor, passes through the 'location' argument to the AbstractNoSql constructor
+function FakeNoSqlDatabase (location) {
+  AbstractNoSql.call(this, location)
 }
 
-// our new prototype inherits from AbstractLevelDOWN
-util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
+// our new prototype inherits from AbstractNoSql
+util.inherits(FakeNoSqlDatabase, AbstractNoSql)
 
 // implement some methods
 
-FakeLevelDOWN.prototype._openSync = function (options) {
+FakeNoSqlDatabase.prototype._openSync = function (options) {
   this._store = {}
   return true
 }
 
-FakeLevelDOWN.prototype._putSync = function (key, value, options) {
+FakeNoSqlDatabase.prototype._putSync = function (key, value, options) {
   key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
   this._store[key] = value
   return true
 }
 
 //the isExists is an optional method:
-FakeLevelDOWN.prototype._isExistsSync = function (key, options) {
+FakeNoSqlDatabase.prototype._isExistsSync = function (key, options) {
   return this._store.hasOwnProperty('_' + key)
 }
 
-FakeLevelDOWN.prototype._getSync = function (key, options) {
+FakeNoSqlDatabase.prototype._getSync = function (key, options) {
   var value = this._store['_' + key]
   if (value === undefined) {
     // 'NotFound' error, consistent with LevelDOWN API
@@ -477,14 +453,14 @@ FakeLevelDOWN.prototype._getSync = function (key, options) {
   return value
 }
 
-FakeLevelDOWN.prototype._delSync = function (key, options) {
+FakeNoSqlDatabase.prototype._delSync = function (key, options) {
   delete this._store['_' + key]
   return true
 }
 
 //use it directly
 
-var db = new FakeLevelDOWN()
+var db = new FakeNoSqlDatabase()
 
 //sync:
 db.put('foo', 'bar')
@@ -508,13 +484,13 @@ db.put('foo', 'bar', function (err) {
 db.readStream().on('data', function(data){
 })
 
-// now use it in LevelUP
+// Or use it in LevelUP
 
 var levelup = require('levelup')
 
 var db = levelup('/who/cares/', {
   // the 'db' option replaces LevelDOWN
-  db: function (location) { return new FakeLevelDOWN(location) }
+  db: function (location) { return new FakeNoSqlDatabase(location) }
 })
 
 //async:
@@ -541,40 +517,40 @@ use async methods(no sync supports):
 
 ```js
 var util = require('util')
-  , AbstractLevelDOWN = require('./').AbstractLevelDOWN
+  , AbstractNoSql = require('./').AbstractNoSql
 
-// constructor, passes through the 'location' argument to the AbstractLevelDOWN constructor
-function FakeLevelDOWN (location) {
-  AbstractLevelDOWN.call(this, location)
+// constructor, passes through the 'location' argument to the AbstractNoSql constructor
+function FakeNoSqlDatabase (location) {
+  AbstractNoSql.call(this, location)
 }
 
-// our new prototype inherits from AbstractLevelDOWN
-util.inherits(FakeLevelDOWN, AbstractLevelDOWN)
+// our new prototype inherits from AbstractNoSql
+util.inherits(FakeNoSqlDatabase, AbstractNoSql)
 
 // implement some methods
 
-FakeLevelDOWN.prototype._open = function (options, callback) {
+FakeNoSqlDatabase.prototype._open = function (options, callback) {
   // initialise a memory storage object
   this._store = {}
   // optional use of nextTick to be a nice async citizen
   process.nextTick(function () { callback(null, this) }.bind(this))
 }
 
-FakeLevelDOWN.prototype._put = function (key, value, options, callback) {
+FakeNoSqlDatabase.prototype._put = function (key, value, options, callback) {
   key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
   this._store[key] = value
   process.nextTick(callback)
 }
 
 //the isExists is an optional method:
-FakeLevelDOWN.prototype._isExists = function (key, options, callback) {
+FakeNoSqlDatabase.prototype._isExists = function (key, options, callback) {
   var value = this._store.hasOwnProperty('_' + key)
   process.nextTick(function () {
     callback(null, value)
   })
 }
 
-FakeLevelDOWN.prototype._get = function (key, options, callback) {
+FakeNoSqlDatabase.prototype._get = function (key, options, callback) {
   var value = this._store['_' + key]
   if (value === undefined) {
     // 'NotFound' error, consistent with LevelDOWN API
@@ -585,7 +561,7 @@ FakeLevelDOWN.prototype._get = function (key, options, callback) {
   })
 }
 
-FakeLevelDOWN.prototype._del = function (key, options, callback) {
+FakeNoSqlDatabase.prototype._del = function (key, options, callback) {
   delete this._store['_' + key]
   process.nextTick(callback)
 }
@@ -596,7 +572,7 @@ var levelup = require('levelup')
 
 var db = levelup('/who/cares/', {
   // the 'db' option replaces LevelDOWN
-  db: function (location) { return new FakeLevelDOWN(location) }
+  db: function (location) { return new FakeNoSqlDatabase(location) }
 })
 
 db.put('foo', 'bar', function (err) {
