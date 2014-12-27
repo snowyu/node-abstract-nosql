@@ -7,4 +7,4 @@ branches:
     - master
 notifications:
   email:
-    - rod@vagg.org
+    - nobody@nowhere.org
