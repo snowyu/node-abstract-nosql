@@ -1,6 +1,6 @@
 try {
-  module.exports = require('nosql-stream/abstract/iterator-test');
+  module.exports = require('abstract-iterator/abstract/iterator-test');
 } catch(e) {
-  console.error("type `npm install nosql-stream` to enable the feature.")
+  console.error("type `npm install abstract-iterator` to enable the feature.")
   throw e
 }
