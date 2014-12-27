@@ -38,17 +38,18 @@
     "xtend": "~3.0.0"
   },
   "devDependencies": {
+    "coffee-script": "~1.8.0",
     "nosql-stream": "1.x",
-    "tap": "*",
+    "rimraf": "*",
     "sinon": "*",
-    "rimraf": "*"
+    "tap": "*"
   },
   "browser": {
     "rimraf": false
   },
   "scripts": {
     "test": "node ./test.js",
-    "prepublish": "coffee -o . -c src/*.coffee"
+    "prepublish":  "./node_modules/.bin/coffee -o . -c src/*.coffee"
   },
   "license": "MIT"
 }
