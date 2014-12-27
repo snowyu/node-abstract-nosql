@@ -1,6 +1,6 @@
 const tap                  = require('tap')
     , sinon                = require('sinon')
-    , util                 = require('util')
+    , util                 = require('abstract-object/lib/util')
     , testCommon           = require('./testCommon')
     , AbstractLevelDOWN    = require('./').AbstractLevelDOWN
     , AbstractIterator     = require('./').AbstractIterator
@@ -68,6 +68,20 @@ tap.test('test core extensibility', function (t) {
   util.inherits(Test, AbstractLevelDOWN)
 
   ;new Test('foobar')
+})
+
+tap.test('test core init extensibility', function (t) {
+  function Test (location) {
+  }
+  Test.prototype.init = function(location) {
+    Test.__super__.init.call(this, location);
+    t.equal(this.location, location, 'location set on `this`')
+    t.end()
+  }
+
+  util.inherits(Test, AbstractLevelDOWN)
+
+  ; util.createObject(Test, 'foobar')
 })
 
 tap.test('test open() extensibility', function (t) {
