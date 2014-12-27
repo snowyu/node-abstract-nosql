@@ -34,12 +34,11 @@
   ],
   "main": "./abstract-nosql.js",
   "dependencies": {
-    "abstract-object": "~1.3.5",
+    "abstract-object": "1.x",
     "xtend": "~3.0.0"
   },
   "devDependencies": {
-    "coffee-script": "~1.8.0",
-    "nosql-stream": "~1.1.2",
+    "nosql-stream": "1.x",
     "rimraf": "*",
     "sinon": "*",
     "tap": "*"
@@ -49,7 +48,7 @@
   },
   "scripts": {
     "test": "node ./test.js",
-    "prepublish":  "./node_modules/.bin/coffee -o . -c src/*.coffee"
+    "build":  "coffee -o . -c src/*.coffee"
   },
   "license": "MIT"
 }
