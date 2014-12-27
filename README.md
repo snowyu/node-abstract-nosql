@@ -1,4 +1,4 @@
-# Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png)](http://travis-ci.org/snowyu/node-abstract-nosql)
+# Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png?branch=master)](http://travis-ci.org/snowyu/node-abstract-nosql)
 
 [![NPM](https://nodei.co/npm/abstract-nosql.png?downloads=true&downloadRank=true)](https://nodei.co/npm/abstract-nosql/)
 [![NPM](https://nodei.co/npm-dl/abstract-nosql.png?months=6&height=3)](https://nodei.co/npm/abstract-nosql/)
