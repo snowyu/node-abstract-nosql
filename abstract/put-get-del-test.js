@@ -76,10 +76,10 @@ function makeErrorKeyTest (type, key, expectedError) {
 
 /**** SETUP ENVIRONMENT ****/
 
-module.exports.setUp = function (leveldown, test, testCommon) {
+module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
   test('setUp common', testCommon.setUp)
   test('setUp db', function (t) {
-    db = leveldown(testCommon.location())
+    db = NoSqlDatabase(testCommon.location())
     db.open(t.end.bind(t))
   })
 }
@@ -165,10 +165,10 @@ module.exports.tearDown = function (test, testCommon) {
   })
 }
 
-module.exports.all = function (leveldown, testFunc, testCommon, buffer, BufferType) {
+module.exports.all = function (NoSqlDatabase, testFunc, testCommon, buffer, BufferType) {
   testBuffer = buffer
   test = testFunc
-  module.exports.setUp(leveldown, test, testCommon)
+  module.exports.setUp(NoSqlDatabase, test, testCommon)
   module.exports.errorKeys(test, BufferType)
   module.exports.nonErrorKeys(test)
   module.exports.errorValues(test, BufferType)

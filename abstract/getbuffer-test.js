@@ -34,7 +34,11 @@ module.exports.getBuffer = function (test) {
 
           db.getBuffer('foo', destBuffer, { offset: 3 }, function (err, len) {
             testDestBuffer(t, err, len, 'bar', 3)
-            t.end()
+            db.getBuffer('foo', null, function (err, len) {
+              t.error(err)
+              t.equal(len, 3)
+              t.end()
+            })
           })
         })
       })
@@ -53,7 +57,7 @@ module.exports.getBuffer = function (test) {
         , j = 0
 
       for (; i < 10; ++i)
-        db.getBuffer('hello', destBuffer, function(err, value) {
+        db.getBuffer('hello', destBuffer, function(err, len) {
           testDestBuffer(t, err, len, 'world')
           done()
         })

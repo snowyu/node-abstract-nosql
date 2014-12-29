@@ -2,10 +2,10 @@ var db
   , verifyNotFoundError = require('./util').verifyNotFoundError
   , isTypedArray        = require('./util').isTypedArray
 
-module.exports.setUp = function (leveldown, test, testCommon) {
+module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
   test('setUp common', testCommon.setUp)
   test('setUp db', function (t) {
-    db = leveldown(testCommon.location())
+    db = NoSqlDatabase(testCommon.location())
     db.open(t.end.bind(t))
   })
 }
@@ -52,11 +52,11 @@ module.exports.sync = function (test) {
   })
 }
 
-module.exports.all = function (leveldown, test, testCommon) {
-  module.exports.setUp(leveldown, test, testCommon)
+module.exports.all = function (NoSqlDatabase, test, testCommon) {
+  module.exports.setUp(NoSqlDatabase, test, testCommon)
   module.exports.args(test)
   module.exports.del(test)
-  if (leveldown.prototype._delSync) {
+  if (NoSqlDatabase.prototype._delSync) {
     module.exports.sync(test)
     module.exports.del(test)
   }
