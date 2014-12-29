@@ -32,7 +32,13 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes(diference from abstract-leveldown)
 
-- Remove the AbstractIterator to [nosql-stream](https://github.com/snowyu/nosql-stream) package
++ getBuffer/getBufferSync(key, destBuffer, options) optional method.
+  * the key's value will be put into the destBuffer if destBuffer is not null.
+  * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
+  * the value will be truncated if the destBuffer.length is less than value's.
+  * return the byte size of value.
+  * the will use the get/getSync to simulate if no \_getBuffer implemented.
+- Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
 + Add the stream ability
   * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.

@@ -6,6 +6,8 @@ ReadStream            = NoSqlStream.ReadStream  if NoSqlStream
 WriteStream           = NoSqlStream.WriteStream if NoSqlStream
 AbstractObject        = require("abstract-object")
 util                  = require("abstract-object/lib/util")
+Codec                 = require("buffer-codec")
+utf8ByteLength        = Codec.getByteLen
 Errors                = require("./abstract-error")
 AbstractIterator      = require("./abstract-iterator")
 AbstractChainedBatch  = require("./abstract-chained-batch")
@@ -63,6 +65,14 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     if @_getSync
       options = {} unless options?
       result = @_getSync(key, options)
+      return result
+    throw new NotImplementedError()
+
+  getBufferSync: (key, destBuffer, options) ->
+    if @_getBufferSync
+      options = {} unless options?
+      options.offset = 0 unless options.offset?
+      result = @_getBufferSync(key, destBuffer, options)
       return result
     throw new NotImplementedError()
 
@@ -187,6 +197,38 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
             callback err
         else
           callback null, true
+
+  _getBuffer: (key, destBuffer, options, callback) ->
+    that = this
+    if @_getSync or @_getBufferSync isnt AbstractNoSQL::_getBufferSync
+      setImmediate ->
+        result = undefined
+        try
+          result = that._getBufferSync(key, destBuffer, options)
+        catch err
+          callback err
+          return
+        callback null, result
+    else if @_get
+      @_get key, options, (err, value)->
+        return callback(err) if err
+        result = utf8ByteLength(value)
+        if destBuffer
+          len = Math.min(result, destBuffer.length)
+          destBuffer.write(value, options.offset, len) if len
+        callback null, result
+    else
+      setImmediate callback
+  _getBufferSync: (key, destBuffer, options) ->
+    if @_getSync
+      value = @_getSync(key, options)
+      result = utf8ByteLength(value)
+      if destBuffer
+        len = Math.min(result, destBuffer.length)
+        destBuffer.write(value, options.offset, len) if len
+      return result
+    else
+      throw new NotImplementedError('_mGetSync: _getSync is not implemented.')
 
   _mGetSync: (keys, options) ->
     if @_getSync
@@ -373,6 +415,20 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       @_isExists key, options, callback
     else
       @isExistsSync key, options
+  isExist: @::isExists
+
+  getBuffer: (key, destBuffer, options, callback) ->
+    err = undefined
+    if typeof options is "function"
+      callback = options
+      options = {}
+    else
+      options = {} unless options?
+    options.offset = 0 unless options.offset?
+    if callback
+      @_getBuffer key, destBuffer, options, callback
+    else
+      @getBufferSync key, destBuffer, options
 
   mGet: (keys, options, callback) ->
     err = undefined

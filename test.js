@@ -28,6 +28,9 @@ require('./abstract/isExists-test').args(tap.test)
 require('./abstract/get-test').setUp(factory, tap.test, testCommon)
 require('./abstract/get-test').args(tap.test)
 
+require('./abstract/getbuffer-test').setUp(factory, tap.test, testCommon)
+require('./abstract/getbuffer-test').args(tap.test)
+
 require('./abstract/mget-test').setUp(factory, tap.test, testCommon)
 require('./abstract/mget-test').args(tap.test)
 
@@ -177,6 +180,47 @@ tap.test('test get() extensibility', function (t) {
   t.equal(spy.getCall(1).args[0], expectedKey, 'got expected key argument')
   t.deepEqual(spy.getCall(1).args[1], expectedOptions, 'got expected options argument')
   t.equal(spy.getCall(1).args[2], expectedCb, 'got expected cb argument')
+  t.end()
+})
+
+tap.test('test getbuffer() extensibility', function (t) {
+  var spy = sinon.spy()
+    , expectedCb = function () {}
+    , expectedBuffer = new Buffer(12)
+    , expectedOptions = { }
+    , expectedKey = 'a key'
+    , test
+
+  function Test (location) {
+    AbstractLevelDOWN.call(this, location)
+  }
+
+  util.inherits(Test, AbstractLevelDOWN)
+
+  Test.prototype._getBuffer = spy
+
+  test = new Test('foobar')
+  test.getBuffer(expectedKey, expectedBuffer, expectedCb)
+
+  t.equal(spy.callCount, 1, 'got _getBuffer() call')
+  t.equal(spy.getCall(0).thisValue, test, '`this` on _getBuffer() was correct')
+  t.equal(spy.getCall(0).args.length, 4, 'got four arguments')
+  t.equal(spy.getCall(0).args[0], expectedKey, 'got expected key argument')
+  t.equal(spy.getCall(0).args[1], expectedBuffer, 'got expected destBuffer argument')
+  t.deepEqual(spy.getCall(0).args[2], expectedOptions, 'got default options argument')
+  t.equal(spy.getCall(0).args[3], expectedCb, 'got expected cb argument')
+
+  test.getBuffer(expectedKey, expectedBuffer, { options: 1 }, expectedCb)
+
+  expectedOptions.options = 1
+
+  t.equal(spy.callCount, 2, 'got _getBuffer() call')
+  t.equal(spy.getCall(1).thisValue, test, '`this` on _getBuffer() was correct')
+  t.equal(spy.getCall(1).args.length, 4, 'got four arguments')
+  t.equal(spy.getCall(1).args[0], expectedKey, 'got expected key argument')
+  t.equal(spy.getCall(1).args[1], expectedBuffer, 'got expected destBuffer argument')
+  t.deepEqual(spy.getCall(1).args[2], expectedOptions, 'got options argument')
+  t.equal(spy.getCall(1).args[3], expectedCb, 'got expected cb argument')
   t.end()
 })
 
