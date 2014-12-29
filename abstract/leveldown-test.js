@@ -4,7 +4,7 @@ module.exports.args = function (leveldown, test) {
         function () {
           leveldown({})
         }
-      , { name: 'Error', message: 'constructor requires a location string argument' }
+      , { name: 'InvalidArgumentError', message: 'constructor requires a location string argument' }
       , 'non-string location leveldown() throws'
     )
     t.end()

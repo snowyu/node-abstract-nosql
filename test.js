@@ -187,7 +187,7 @@ tap.test('test getbuffer() extensibility', function (t) {
   var spy = sinon.spy()
     , expectedCb = function () {}
     , expectedBuffer = new Buffer(12)
-    , expectedOptions = { }
+    , expectedOptions = {offset:0 }
     , expectedKey = 'a key'
     , test
 
