@@ -125,6 +125,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       options.errorIfExists = !!options.errorIfExists
       result = @_openSync(options)
       @setOpened true, options if result
+      result = @ if result
       return result
     throw new NotImplementedError()
 
