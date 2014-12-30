@@ -23,29 +23,44 @@ function testDestBuffer(t, err, len, expected, offset) {
   destBuffer.fill(0, offset, offset+expected.length)
 }
 module.exports.getBuffer = function (test) {
-  test('test simple getBuffer()', function (t) {
+  test('test simple Setup', function (t) {
     db.put('foo', 'bar', function (err) {
       t.error(err)
+      t.end()
+    })
+  })
+  test('test simple getBuffer() with default options', function (t) {
       db.getBuffer('foo', destBuffer, function (err, len) {
         testDestBuffer(t, err, len, 'bar')
-
-        db.getBuffer('foo', destBuffer, {}, function (err, len) { // same but with {}
-          testDestBuffer(t, err, len, 'bar')
-
-          db.getBuffer('foo', destBuffer, { offset: 3 }, function (err, len) {
-            testDestBuffer(t, err, len, 'bar', 3)
-            db.getBuffer('foo', null, function (err, len) {
-              t.error(err)
-              t.equal(len, 3)
-              db.getBuffer('foo', destBuffer, {offset: destBuffer.length-1}, function (err, len) {
-                testDestBuffer(t, err, len, 'b', destBuffer.length-1)
-                t.end()
-              })
-            })
-          })
-        })
+        t.end()
       })
-    })
+  })
+
+  test('test simple getBuffer() with empty options', function (t) {
+      db.getBuffer('foo', destBuffer, {}, function (err, len) { // same but with {}
+        testDestBuffer(t, err, len, 'bar')
+        t.end()
+      })
+  })
+
+  test('test simple getBuffer() with offset option', function (t) {
+      db.getBuffer('foo', destBuffer, { offset: 3 }, function (err, len) {
+        testDestBuffer(t, err, len, 'bar', 3)
+        t.end()
+      })
+  })
+  test('test simple getBuffer() with no destBuffer', function (t) {
+      db.getBuffer('foo', null, function (err, len) {
+        t.error(err)
+        t.equal(len, 3)
+        t.end()
+      })
+  })
+  test('test simple getBuffer() with value truncated', function (t) {
+      db.getBuffer('foo', destBuffer, {offset: destBuffer.length-1}, function (err, len) {
+        testDestBuffer(t, err, len, 'b', destBuffer.length-1)
+        t.end()
+      })
   })
 
   test('test simultaniously get()', function (t) {
