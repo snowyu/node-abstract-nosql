@@ -214,18 +214,19 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
         return callback(err) if err
         result = utf8ByteLength(value)
         if destBuffer
-          len = Math.min(result, destBuffer.length)
-          destBuffer.write(value, options.offset, len) if len
+          result = Math.min(result, destBuffer.length)
+          result = destBuffer.write(value, options.offset, result) if result
         callback null, result
     else
       setImmediate callback
+
   _getBufferSync: (key, destBuffer, options) ->
     if @_getSync
       value = @_getSync(key, options)
       result = utf8ByteLength(value)
       if destBuffer
-        len = Math.min(result, destBuffer.length)
-        destBuffer.write(value, options.offset, len) if len
+        result = Math.min(result, destBuffer.length)
+        result = destBuffer.write(value, options.offset, result) if result
       return result
     else
       throw new NotImplementedError('_mGetSync: _getSync is not implemented.')

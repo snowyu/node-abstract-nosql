@@ -324,15 +324,15 @@
         });
       } else if (this._get) {
         return this._get(key, options, function(err, value) {
-          var len, result;
+          var result;
           if (err) {
             return callback(err);
           }
           result = utf8ByteLength(value);
           if (destBuffer) {
-            len = Math.min(result, destBuffer.length);
-            if (len) {
-              destBuffer.write(value, options.offset, len);
+            result = Math.min(result, destBuffer.length);
+            if (result) {
+              result = destBuffer.write(value, options.offset, result);
             }
           }
           return callback(null, result);
@@ -343,14 +343,14 @@
     };
 
     AbstractNoSQL.prototype._getBufferSync = function(key, destBuffer, options) {
-      var len, result, value;
+      var result, value;
       if (this._getSync) {
         value = this._getSync(key, options);
         result = utf8ByteLength(value);
         if (destBuffer) {
-          len = Math.min(result, destBuffer.length);
-          if (len) {
-            destBuffer.write(value, options.offset, len);
+          result = Math.min(result, destBuffer.length);
+          if (result) {
+            result = destBuffer.write(value, options.offset, result);
           }
         }
         return result;

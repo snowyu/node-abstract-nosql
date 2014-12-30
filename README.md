@@ -126,7 +126,7 @@ var AlreadyEndError = createError("AlreadyEnd", 53)
 
 ## Streamable
 
-Once implements the AbstractIterator:
+Once implements the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator):
 
 * AbstractIterator.\_nextSync() or AbstractIterator.\_next().
 * AbstractIterator.\_endSync() or AbstractIterator.\_end().
@@ -590,7 +590,7 @@ db.put('foo', 'bar', function (err) {
 })
 ```
 
-See [MemDOWN](https://github.com/rvagg/memdown/) if you are looking for a complete in-memory replacement for LevelDOWN.
+See [MemDOWN-sync](https://github.com/snowyu/node-memdown-sync/) if you are looking for a complete in-memory replacement for AbstractNoSql database.
 
 
 <a name="contributing"></a>
