@@ -80,13 +80,17 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     if @_mGetSync
       options = {} unless options?
       options.raiseError = options.raiseError isnt false
+      needKeyName = options.keys
       arr = @_mGetSync(keys, options)
       i = 0
       result = []
       while i < arr.length
-        result.push
-          key: arr[i]
-          value: arr[++i]
+        if needKeyName isnt false
+          result.push
+            key: arr[i]
+            value: arr[++i]
+        else
+          result.push arr[i]
         i++
       return result
     throw new NotImplementedError()

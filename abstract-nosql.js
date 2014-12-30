@@ -130,20 +130,25 @@
     };
 
     AbstractNoSQL.prototype.mGetSync = function(keys, options) {
-      var arr, i, result;
+      var arr, i, needKeyName, result;
       if (this._mGetSync) {
         if (options == null) {
           options = {};
         }
         options.raiseError = options.raiseError !== false;
+        needKeyName = options.keys;
         arr = this._mGetSync(keys, options);
         i = 0;
         result = [];
         while (i < arr.length) {
-          result.push({
-            key: arr[i],
-            value: arr[++i]
-          });
+          if (needKeyName !== false) {
+            result.push({
+              key: arr[i],
+              value: arr[++i]
+            });
+          } else {
+            result.push(arr[i]);
+          }
           i++;
         }
         return result;
@@ -207,6 +212,9 @@
         result = this._openSync(options);
         if (result) {
           this.setOpened(true, options);
+        }
+        if (result) {
+          result = this;
         }
         return result;
       }

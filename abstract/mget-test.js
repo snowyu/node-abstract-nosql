@@ -41,41 +41,66 @@ module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
 module.exports.args = function (test) {
 }
 
+module.exports.mgetSync = function (test) {
+  test('test mGet() keys=false sync', function (t) {
+    var arr = db.mGetSync(["01","02","03",'foo'], {keys: false})
+    t.equal(arr.length, 4)
+    var expected = sourceData.slice(1, 4).map(valueTransformSource)
+    expected.push("bar")
+    t.deepEqual(arr, expected)
+    t.end()
+  })
+}
+
 module.exports.mget = function (test) {
-  test('test simple mGet()', function (t) {
+  test('test simple mGet() with default options', function (t) {
     db.mGet(['foo'], function (err, arr) {
       t.error(err)
       t.deepEqual(arr, [{key:'foo', value:'bar'}])
+      t.end()
+    })
+  })
 
-      db.mGet(['foo'], {asBuffer: true}, function (err, arr) {
-        t.error(err)
-        t.type(arr, 'Array')
-        t.equal(arr.length, 1)
-        value = arr[0].value
-        t.ok(typeof value !== 'string', 'should not be string by default')
+  test('test simple mGet() with asBuffer option', function (t) {
+    db.mGet(['foo'], {asBuffer: true}, function (err, arr) {
+      t.error(err)
+      t.type(arr, 'Array')
+      t.equal(arr.length, 1)
+      value = arr[0].value
+      t.ok(typeof value !== 'string', 'should not be string by default')
 
-        var result
-        if (isTypedArray(value)) {
-          result = String.fromCharCode.apply(null, new Uint16Array(value))
-        } else {
-          t.ok(typeof Buffer != 'undefined' && value instanceof Buffer)
-          try {
-            result = value.toString()
-          } catch (e) {
-            t.error(e, 'should not throw when converting value to a string')
-          }
+      var result
+      if (isTypedArray(value)) {
+        result = String.fromCharCode.apply(null, new Uint16Array(value))
+      } else {
+        t.ok(typeof Buffer != 'undefined' && value instanceof Buffer)
+        try {
+          result = value.toString()
+        } catch (e) {
+          t.error(e, 'should not throw when converting value to a string')
         }
-        t.equal(result, 'bar')
+      }
+      t.equal(result, 'bar')
+      t.end()
+    })
+  })
 
-        db.mGet(["01","02","03",'foo'], function (err, arr) {
-          t.error(err)
-          t.equal(arr.length, 4)
-          var expected = sourceData.slice(1, 4).map(transformSource)
-          expected.push({key:"foo", value:"bar"})
-          t.deepEqual(arr, expected)
-          t.end()
-        })
-      })
+  test('test simple mGet() with specified keys', function (t) {
+    db.mGet(["01","02","03",'foo'], function (err, arr) {
+      t.error(err)
+      t.equal(arr.length, 4)
+      var expected = sourceData.slice(1, 4).map(transformSource)
+      expected.push({key:"foo", value:"bar"})
+      t.deepEqual(arr, expected)
+      t.end()
+    })
+  })
+  test('test mGet() raiseError', function (t) {
+    db.mGet(["01","02","03",'foo', 'Not Found'], {raiseError: true}, function (err, arr) {
+      t.ok(err, "should err")
+      t.ok((/NotFound/i).test(err))
+      t.ok(arr == null)
+      t.end()
     })
   })
   test('test mGet() raiseError=false', function (t) {
@@ -148,6 +173,7 @@ module.exports.all = function (NoSqlDatabase, test, testCommon) {
   module.exports.setUp(NoSqlDatabase, test, testCommon)
   module.exports.args(test)
   module.exports.mget(test)
+  module.exports.mgetSync(test)
   if (NoSqlDatabase.prototype._mGetSync) {
     module.exports.sync(test)
     module.exports.mget(test)
