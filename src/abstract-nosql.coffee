@@ -21,7 +21,7 @@ CloseError            = Errors.CloseError
 inherits              = util.inherits
 isString              = util.isString
 
-module.exports.AbstractNoSQL = class AbstractNoSQL
+module.exports = class AbstractNoSQL
   inherits AbstractNoSQL, AbstractObject
 
   constructor: ->
@@ -43,10 +43,11 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
     else
       @_opened = false
       @emit "closed"
-      
+
   #the optimal low-level sync functions:
   isExistsSync: (key, options) ->
     options = {} unless options?
+    key = String(key)  unless @_isBuffer(key)
     if @_isExistsSync
       result = @_isExistsSync(key, options)
       return result
@@ -64,6 +65,8 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   getSync: (key, options) ->
     if @_getSync
       options = {} unless options?
+      throw err if err = @_checkKey(key, "key")
+      key = String(key)  unless @_isBuffer(key)
       result = @_getSync(key, options)
       return result
     throw new NotImplementedError()
@@ -112,12 +115,23 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   batchSync: (operations, options) ->
     if @_batchSync
       options = {} unless options?
+      unless Array.isArray(operations)
+        vError = new Error("batch(operations) requires an array argument")
+        return callback(vError)
+      for e in operations
+        continue unless typeof e is "object"
+        return callback(err) if err = @_checkKey(e.type, "type")
+        return callback(err) if err = @_checkKey(e.key, "key")
       result = @_batchSync(operations, options)
       return result
     throw new NotImplementedError()
 
   approximateSizeSync: (start, end) ->
     if @_approximateSizeSync
+      if not start? or not end?
+        throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` arguments")
+      start = String(start)  unless @_isBuffer(start)
+      end = String(end)  unless @_isBuffer(end)
       result = @_approximateSizeSync(start, end)
       return result
     throw new NotImplementedError()
@@ -384,16 +398,20 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
   #  this._exec(this._openSync, [options], callback)
   #
   #
-  open: (options, callback) ->
-    callback = options  if typeof options is "function"
-    options = @_options || {} unless typeof options is "object"
+  openAsync: (options, callback) ->
+    options = {} unless options?
     options.createIfMissing = options.createIfMissing isnt false
     options.errorIfExists = !!options.errorIfExists
+    that = this
+    @_open options, (err, result) ->
+      that.setOpened true, options if not err?
+      callback err, result
+  open: (options, callback) ->
+    if typeof options is "function"
+      callback = options
+      options = undefined
     if callback
-      that = this
-      @_open options, (err, result) ->
-        that.setOpened true, options if not err?
-        callback err, result
+      @openAsync options, callback
     else
       @openSync options
 
@@ -406,208 +424,157 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
           callback err, result
 
       else
-        throw new Error("close() requires callback function argument")
+        throw new InvalidArgumentError("close() requires callback function argument")
     else
       @closeSync()
 
+  isExistsAsync: (key, options, callback) ->
+    options = {} unless options?
+    key = String(key)  unless @_isBuffer(key)
+    @_isExists key, options, callback
   isExists: (key, options, callback) ->
     if typeof options is "function"
       callback = options
       options = {}
     else
-      options = {} unless options?
-    key = String(key)  unless @_isBuffer(key)
     if callback
-      @_isExists key, options, callback
+      @isExistsAsync key, options, callback
     else
       @isExistsSync key, options
   isExist: @::isExists
 
+  getBufferAsync: (key, destBuffer, options, callback) ->
+    options = {} unless options?
+    options.offset = 0 unless options.offset?
+    @_getBuffer key, destBuffer, options, callback
   getBuffer: (key, destBuffer, options, callback) ->
     err = undefined
     if typeof options is "function"
       callback = options
       options = {}
-    else
-      options = {} unless options?
-    options.offset = 0 unless options.offset?
     if callback
-      @_getBuffer key, destBuffer, options, callback
+      @getBufferAsync key, destBuffer, options, callback
     else
       @getBufferSync key, destBuffer, options
 
+  mGetAsync: (keys, options, callback) ->
+    options = {} unless options?
+    options.asBuffer = options.asBuffer is true
+    options.raiseError = options.raiseError isnt false
+    needKeyName = options.keys isnt false
+    @_mGet keys, options, (err, arr)->
+      return callback(err) if err
+      if needKeyName
+        i = 0
+        result = []
+        while i < arr.length
+          result.push
+            key: arr[i]
+            value: arr[++i]
+          i++
+      else
+        result = arr
+      callback null, result
   mGet: (keys, options, callback) ->
     err = undefined
     if typeof options is "function"
       callback = options
       options = {}
     else
-      options = {} unless options?
-    options.asBuffer = options.asBuffer is true
-    options.raiseError = options.raiseError isnt false
-    needKeyName = options.keys isnt false
     if callback
-      @_mGet keys, options, (err, arr)->
-        return callback(err) if err
-        if needKeyName
-          i = 0
-          result = []
-          while i < arr.length
-            result.push
-              key: arr[i]
-              value: arr[++i]
-            i++
-        else
-          result = arr
-        callback null, result
+      @mGetAsync keys, options, callback
     else
       @mGetSync keys, options
 
+  getAsync: (key, options, callback) ->
+    options = {} unless options?
+    return callback(err) if err = @_checkKey(key, "key")
+    key = String(key)  unless @_isBuffer(key)
+    options.asBuffer = options.asBuffer isnt false
+    @_get key, options, callback
   get: (key, options, callback) ->
     err = undefined
     if typeof options is "function"
       callback = options
       options = {}
-    else
-      options = {} unless options?
-    if err = @_checkKey(key, "key", @_isBuffer)
-      if callback
-        return callback(err)
-      else
-        throw err
-    key = String(key)  unless @_isBuffer(key)
-    options.asBuffer = options.asBuffer isnt false
     if callback
-      @_get key, options, callback
+      @getAsync key, options, callback
     else
       @getSync key, options
+
+  putAsync: (key, value, options, callback) ->
+    options = {} unless options?
+    return callback(err) if err = @_checkKey(key, "key", @_isBuffer)
+    key = String(key)  unless @_isBuffer(key)
+    # coerce value to string in node, don't touch it in browser
+    # (indexeddb can store any JS type)
+    value = String(value)  if value? and not @_isBuffer(value) and not process.browser
+    @_put key, value, options, callback
 
   put: (key, value, options, callback) ->
     err = undefined
     if typeof options is "function"
       callback = options
       options = {}
-    else
-      options = {} unless options?
-    if err = @_checkKey(key, "key", @_isBuffer)
-      if callback
-        return callback(err)
-      else
-        throw err
-    key = String(key)  unless @_isBuffer(key)
-  
-    # coerce value to string in node, don't touch it in browser
-    # (indexeddb can store any JS type)
-    value = String(value)  if value? and not @_isBuffer(value) and not process.browser
     if callback
-      @_put key, value, options, callback
+      @putAsync key, value, options, callback
     else
       @putSync key, value, options
 
+  delAsync: (key, options, callback) ->
+    options = {} unless options?
+    return callback(err) if err = @_checkKey(key, "key", @_isBuffer)
+    key = String(key)  unless @_isBuffer(key)
+    @_del key, options, callback
   del: (key, options, callback) ->
     err = undefined
     if typeof options is "function"
       callback = options
       options = {}
-    else
-      options = {} unless options?
-    if err = @_checkKey(key, "key", @_isBuffer)
-      if callback
-        return callback(err)
-      else
-        throw err
-    key = String(key)  unless @_isBuffer(key)
     if callback
-      @_del key, options, callback
+      @delAsync key, options, callback
     else
       @delSync key, options
 
+  batchAsync: (array, options, callback) ->
+    options = {} unless options?
+    unless Array.isArray(array)
+      vError = new Error("batch(array) requires an array argument")
+      return callback(vError)
+    for e in array
+      continue unless typeof e is "object"
+      return callback(err) if err = @_checkKey(e.type, "type")
+      return callback(err) if err = @_checkKey(e.key, "key")
+    @_batch array, options, callback
   batch: (array, options, callback) ->
     return @_chainedBatch()  unless arguments.length
     if typeof options is "function"
       callback = options
       options = {}
-    else
-      options = {} unless options?
-    callback = array  if typeof array is "function"
-    unless Array.isArray(array)
-      vError = new Error("batch(array) requires an array argument")
-      if callback
-        return callback(vError)
-      else
-        throw vError
-    for e in array
-      continue unless typeof e is "object"
-      if err = @_checkKey(e.type, "type", @_isBuffer)
-        if callback
-          return callback(err)
-        else
-          throw err
-      if err = @_checkKey(e.key, "key", @_isBuffer)
-        if callback
-          return callback(err)
-        else
-          throw err
+    callback = array if typeof array is "function"
     if callback
-      @_batch array, options, callback
+      @batchAsync array, options, callback
     else
       @batchSync array, options
 
 
   #TODO: remove from here, not a necessary primitive
-  approximateSize: (start, end, callback) ->
-    throw new Error("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments")  if not start? or not end? or typeof start is "function" or typeof end is "function"
+  approximateSizeAsync: (start, end, callback) ->
     start = String(start)  unless @_isBuffer(start)
     end = String(end)  unless @_isBuffer(end)
+    @_approximateSize start, end, callback
+  approximateSize: (start, end, callback) ->
+    if not start? or not end? or typeof start is "function" or typeof end is "function"
+      throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments")
     if callback
-      @_approximateSize start, end, callback
+      @approximateSizeAsync start, end, callback
     else
       @approximateSizeSync start, end
-
-  #TODO: move to Iterator.init
-  _setupIteratorOptions: (options) ->
-    self = this
-    options = xtend(options)
-    ["start", "end", "gt", "gte", "lt", "lte"].forEach (o) ->
-      delete options[o]  if options[o] and self._isBuffer(options[o]) and options[o].length is 0
-    options.reverse = !!options.reverse
-
-    range = options.range
-    if isString(range)
-      range = range.trim()
-      if range.length >= 2
-        skipStart = if !options.reverse then range[0] is "(" else range[range.length-1] is ")"
-        skipEnd   = if !options.reverse then range[range.length-1] is ")" else range[0] is "("
-        range     = range.substring(1, range.length-1)
-        range     = range.split(",").map (item)->
-          item = item.trim()
-          item = null if item is ""
-          return item
-        if !options.reverse
-          [start,end] = range
-          startOp = 'gt'
-          endOp = 'lt'
-        else
-          [end, start] = range
-          startOp = 'lt'
-          endOp = 'gt'
-        startOp = startOp + 'e' unless skipStart
-        endOp = endOp + 'e' unless skipEnd
-        options[startOp] = start
-        options[endOp] = end
-    options.keys = options.keys isnt false
-    options.values = options.values isnt false
-    options.limit = (if "limit" of options then options.limit else -1)
-    options.keyAsBuffer = options.keyAsBuffer is true
-    options.valueAsBuffer = options.valueAsBuffer is true
-    options
-
 
   #should override this to test sync or if you do not wanna implement the _iterator function.
   IteratorClass: AbstractIterator
   iterator: (options) ->
     options = {}  unless typeof options is "object"
-    options = @_setupIteratorOptions(options)
     return @_iterator(options)  if typeof @_iterator is "function"
     new @IteratorClass(this, options)
 
@@ -652,6 +619,7 @@ module.exports.AbstractNoSQL = class AbstractNoSQL
       console.error "please `npm install nosql-stream` first"
   createWriteStream: @::writeStream
 
+module.exports.AbstractNoSQL = AbstractNoSQL
 module.exports.AbstractLevelDOWN = AbstractNoSQL
 module.exports.AbstractIterator = AbstractIterator
 module.exports.AbstractChainedBatch = AbstractChainedBatch

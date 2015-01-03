@@ -592,7 +592,7 @@ tap.test('test clear() extensibility', function (t) {
 
 tap.test('test iterator() extensibility', function (t) {
   var spy = sinon.spy()
-    , expectedOptions = { options: 1, reverse: false, keys: true, values: true, limit: -1, keyAsBuffer: false, valueAsBuffer: false }
+    , expectedOptions = { options: 1}
     , test
 
   function Test (location) {
@@ -614,15 +614,16 @@ tap.test('test iterator() extensibility', function (t) {
 })
 
 tap.test('test AbstractIterator extensibility', function (t) {
-  function Test (db) {
-    AbstractIterator.call(this, db)
+  function Test (db, options) {
+    AbstractIterator.call(this, db, options)
     t.equal(this.db, db, 'db set on `this`')
+    t.deepEqual(this.options, {options: 1, reverse: false, keys: true, values: true, limit: -1, keyAsBuffer: false, valueAsBuffer: false })
     t.end()
   }
 
   util.inherits(Test, AbstractIterator)
 
-  ;new Test('foobar')
+  ;new Test('foobar', {options: 1})
 })
 
 tap.test('test next() extensibility', function (t) {

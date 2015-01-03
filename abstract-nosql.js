@@ -46,7 +46,7 @@
 
   isString = util.isString;
 
-  module.exports.AbstractNoSQL = AbstractNoSQL = (function() {
+  module.exports = AbstractNoSQL = (function() {
     inherits(AbstractNoSQL, AbstractObject);
 
     function AbstractNoSQL() {
@@ -83,6 +83,9 @@
       if (options == null) {
         options = {};
       }
+      if (!this._isBuffer(key)) {
+        key = String(key);
+      }
       if (this._isExistsSync) {
         result = this._isExistsSync(key, options);
         return result;
@@ -103,10 +106,16 @@
     };
 
     AbstractNoSQL.prototype.getSync = function(key, options) {
-      var result;
+      var err, result;
       if (this._getSync) {
         if (options == null) {
           options = {};
+        }
+        if (err = this._checkKey(key, "key")) {
+          throw err;
+        }
+        if (!this._isBuffer(key)) {
+          key = String(key);
         }
         result = this._getSync(key, options);
         return result;
@@ -181,10 +190,26 @@
     };
 
     AbstractNoSQL.prototype.batchSync = function(operations, options) {
-      var result;
+      var e, err, result, vError, _i, _len;
       if (this._batchSync) {
         if (options == null) {
           options = {};
+        }
+        if (!Array.isArray(operations)) {
+          vError = new Error("batch(operations) requires an array argument");
+          return callback(vError);
+        }
+        for (_i = 0, _len = operations.length; _i < _len; _i++) {
+          e = operations[_i];
+          if (typeof e !== "object") {
+            continue;
+          }
+          if (err = this._checkKey(e.type, "type")) {
+            return callback(err);
+          }
+          if (err = this._checkKey(e.key, "key")) {
+            return callback(err);
+          }
         }
         result = this._batchSync(operations, options);
         return result;
@@ -195,6 +220,15 @@
     AbstractNoSQL.prototype.approximateSizeSync = function(start, end) {
       var result;
       if (this._approximateSizeSync) {
+        if ((start == null) || (end == null)) {
+          throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` arguments");
+        }
+        if (!this._isBuffer(start)) {
+          start = String(start);
+        }
+        if (!this._isBuffer(end)) {
+          end = String(end);
+        }
         result = this._approximateSizeSync(start, end);
         return result;
       }
@@ -544,24 +578,29 @@
       }
     };
 
-    AbstractNoSQL.prototype.open = function(options, callback) {
+    AbstractNoSQL.prototype.openAsync = function(options, callback) {
       var that;
-      if (typeof options === "function") {
-        callback = options;
-      }
-      if (typeof options !== "object") {
-        options = this._options || {};
+      if (options == null) {
+        options = {};
       }
       options.createIfMissing = options.createIfMissing !== false;
       options.errorIfExists = !!options.errorIfExists;
+      that = this;
+      return this._open(options, function(err, result) {
+        if (err == null) {
+          that.setOpened(true, options);
+        }
+        return callback(err, result);
+      });
+    };
+
+    AbstractNoSQL.prototype.open = function(options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+        options = void 0;
+      }
       if (callback) {
-        that = this;
-        return this._open(options, function(err, result) {
-          if (err == null) {
-            that.setOpened(true, options);
-          }
-          return callback(err, result);
-        });
+        return this.openAsync(options, callback);
       } else {
         return this.openSync(options);
       }
@@ -579,11 +618,21 @@
             return callback(err, result);
           });
         } else {
-          throw new Error("close() requires callback function argument");
+          throw new InvalidArgumentError("close() requires callback function argument");
         }
       } else {
         return this.closeSync();
       }
+    };
+
+    AbstractNoSQL.prototype.isExistsAsync = function(key, options, callback) {
+      if (options == null) {
+        options = {};
+      }
+      if (!this._isBuffer(key)) {
+        key = String(key);
+      }
+      return this._isExists(key, options, callback);
     };
 
     AbstractNoSQL.prototype.isExists = function(key, options, callback) {
@@ -591,15 +640,10 @@
         callback = options;
         options = {};
       } else {
-        if (options == null) {
-          options = {};
-        }
-      }
-      if (!this._isBuffer(key)) {
-        key = String(key);
+
       }
       if (callback) {
-        return this._isExists(key, options, callback);
+        return this.isExistsAsync(key, options, callback);
       } else {
         return this.isExistsSync(key, options);
       }
@@ -607,65 +651,89 @@
 
     AbstractNoSQL.prototype.isExist = AbstractNoSQL.prototype.isExists;
 
+    AbstractNoSQL.prototype.getBufferAsync = function(key, destBuffer, options, callback) {
+      if (options == null) {
+        options = {};
+      }
+      if (options.offset == null) {
+        options.offset = 0;
+      }
+      return this._getBuffer(key, destBuffer, options, callback);
+    };
+
     AbstractNoSQL.prototype.getBuffer = function(key, destBuffer, options, callback) {
       var err;
       err = void 0;
       if (typeof options === "function") {
         callback = options;
         options = {};
-      } else {
-        if (options == null) {
-          options = {};
-        }
-      }
-      if (options.offset == null) {
-        options.offset = 0;
       }
       if (callback) {
-        return this._getBuffer(key, destBuffer, options, callback);
+        return this.getBufferAsync(key, destBuffer, options, callback);
       } else {
         return this.getBufferSync(key, destBuffer, options);
       }
     };
 
+    AbstractNoSQL.prototype.mGetAsync = function(keys, options, callback) {
+      var needKeyName;
+      if (options == null) {
+        options = {};
+      }
+      options.asBuffer = options.asBuffer === true;
+      options.raiseError = options.raiseError !== false;
+      needKeyName = options.keys !== false;
+      return this._mGet(keys, options, function(err, arr) {
+        var i, result;
+        if (err) {
+          return callback(err);
+        }
+        if (needKeyName) {
+          i = 0;
+          result = [];
+          while (i < arr.length) {
+            result.push({
+              key: arr[i],
+              value: arr[++i]
+            });
+            i++;
+          }
+        } else {
+          result = arr;
+        }
+        return callback(null, result);
+      });
+    };
+
     AbstractNoSQL.prototype.mGet = function(keys, options, callback) {
-      var err, needKeyName;
+      var err;
       err = void 0;
       if (typeof options === "function") {
         callback = options;
         options = {};
       } else {
-        if (options == null) {
-          options = {};
-        }
+
       }
-      options.asBuffer = options.asBuffer === true;
-      options.raiseError = options.raiseError !== false;
-      needKeyName = options.keys !== false;
       if (callback) {
-        return this._mGet(keys, options, function(err, arr) {
-          var i, result;
-          if (err) {
-            return callback(err);
-          }
-          if (needKeyName) {
-            i = 0;
-            result = [];
-            while (i < arr.length) {
-              result.push({
-                key: arr[i],
-                value: arr[++i]
-              });
-              i++;
-            }
-          } else {
-            result = arr;
-          }
-          return callback(null, result);
-        });
+        return this.mGetAsync(keys, options, callback);
       } else {
         return this.mGetSync(keys, options);
       }
+    };
+
+    AbstractNoSQL.prototype.getAsync = function(key, options, callback) {
+      var err;
+      if (options == null) {
+        options = {};
+      }
+      if (err = this._checkKey(key, "key")) {
+        return callback(err);
+      }
+      if (!this._isBuffer(key)) {
+        key = String(key);
+      }
+      options.asBuffer = options.asBuffer !== false;
+      return this._get(key, options, callback);
     };
 
     AbstractNoSQL.prototype.get = function(key, options, callback) {
@@ -674,27 +742,29 @@
       if (typeof options === "function") {
         callback = options;
         options = {};
+      }
+      if (callback) {
+        return this.getAsync(key, options, callback);
       } else {
-        if (options == null) {
-          options = {};
-        }
+        return this.getSync(key, options);
+      }
+    };
+
+    AbstractNoSQL.prototype.putAsync = function(key, value, options, callback) {
+      var err;
+      if (options == null) {
+        options = {};
       }
       if (err = this._checkKey(key, "key", this._isBuffer)) {
-        if (callback) {
-          return callback(err);
-        } else {
-          throw err;
-        }
+        return callback(err);
       }
       if (!this._isBuffer(key)) {
         key = String(key);
       }
-      options.asBuffer = options.asBuffer !== false;
-      if (callback) {
-        return this._get(key, options, callback);
-      } else {
-        return this.getSync(key, options);
+      if ((value != null) && !this._isBuffer(value) && !process.browser) {
+        value = String(value);
       }
+      return this._put(key, value, options, callback);
     };
 
     AbstractNoSQL.prototype.put = function(key, value, options, callback) {
@@ -703,29 +773,26 @@
       if (typeof options === "function") {
         callback = options;
         options = {};
+      }
+      if (callback) {
+        return this.putAsync(key, value, options, callback);
       } else {
-        if (options == null) {
-          options = {};
-        }
+        return this.putSync(key, value, options);
+      }
+    };
+
+    AbstractNoSQL.prototype.delAsync = function(key, options, callback) {
+      var err;
+      if (options == null) {
+        options = {};
       }
       if (err = this._checkKey(key, "key", this._isBuffer)) {
-        if (callback) {
-          return callback(err);
-        } else {
-          throw err;
-        }
+        return callback(err);
       }
       if (!this._isBuffer(key)) {
         key = String(key);
       }
-      if ((value != null) && !this._isBuffer(value) && !process.browser) {
-        value = String(value);
-      }
-      if (callback) {
-        return this._put(key, value, options, callback);
-      } else {
-        return this.putSync(key, value, options);
-      }
+      return this._del(key, options, callback);
     };
 
     AbstractNoSQL.prototype.del = function(key, options, callback) {
@@ -734,145 +801,75 @@
       if (typeof options === "function") {
         callback = options;
         options = {};
-      } else {
-        if (options == null) {
-          options = {};
-        }
-      }
-      if (err = this._checkKey(key, "key", this._isBuffer)) {
-        if (callback) {
-          return callback(err);
-        } else {
-          throw err;
-        }
-      }
-      if (!this._isBuffer(key)) {
-        key = String(key);
       }
       if (callback) {
-        return this._del(key, options, callback);
+        return this.delAsync(key, options, callback);
       } else {
         return this.delSync(key, options);
       }
     };
 
-    AbstractNoSQL.prototype.batch = function(array, options, callback) {
+    AbstractNoSQL.prototype.batchAsync = function(array, options, callback) {
       var e, err, vError, _i, _len;
-      if (!arguments.length) {
-        return this._chainedBatch();
-      }
-      if (typeof options === "function") {
-        callback = options;
+      if (options == null) {
         options = {};
-      } else {
-        if (options == null) {
-          options = {};
-        }
-      }
-      if (typeof array === "function") {
-        callback = array;
       }
       if (!Array.isArray(array)) {
         vError = new Error("batch(array) requires an array argument");
-        if (callback) {
-          return callback(vError);
-        } else {
-          throw vError;
-        }
+        return callback(vError);
       }
       for (_i = 0, _len = array.length; _i < _len; _i++) {
         e = array[_i];
         if (typeof e !== "object") {
           continue;
         }
-        if (err = this._checkKey(e.type, "type", this._isBuffer)) {
-          if (callback) {
-            return callback(err);
-          } else {
-            throw err;
-          }
+        if (err = this._checkKey(e.type, "type")) {
+          return callback(err);
         }
-        if (err = this._checkKey(e.key, "key", this._isBuffer)) {
-          if (callback) {
-            return callback(err);
-          } else {
-            throw err;
-          }
+        if (err = this._checkKey(e.key, "key")) {
+          return callback(err);
         }
       }
+      return this._batch(array, options, callback);
+    };
+
+    AbstractNoSQL.prototype.batch = function(array, options, callback) {
+      if (!arguments.length) {
+        return this._chainedBatch();
+      }
+      if (typeof options === "function") {
+        callback = options;
+        options = {};
+      }
+      if (typeof array === "function") {
+        callback = array;
+      }
       if (callback) {
-        return this._batch(array, options, callback);
+        return this.batchAsync(array, options, callback);
       } else {
         return this.batchSync(array, options);
       }
     };
 
-    AbstractNoSQL.prototype.approximateSize = function(start, end, callback) {
-      if ((start == null) || (end == null) || typeof start === "function" || typeof end === "function") {
-        throw new Error("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments");
-      }
+    AbstractNoSQL.prototype.approximateSizeAsync = function(start, end, callback) {
       if (!this._isBuffer(start)) {
         start = String(start);
       }
       if (!this._isBuffer(end)) {
         end = String(end);
       }
+      return this._approximateSize(start, end, callback);
+    };
+
+    AbstractNoSQL.prototype.approximateSize = function(start, end, callback) {
+      if ((start == null) || (end == null) || typeof start === "function" || typeof end === "function") {
+        throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments");
+      }
       if (callback) {
-        return this._approximateSize(start, end, callback);
+        return this.approximateSizeAsync(start, end, callback);
       } else {
         return this.approximateSizeSync(start, end);
       }
-    };
-
-    AbstractNoSQL.prototype._setupIteratorOptions = function(options) {
-      var end, endOp, range, self, skipEnd, skipStart, start, startOp;
-      self = this;
-      options = xtend(options);
-      ["start", "end", "gt", "gte", "lt", "lte"].forEach(function(o) {
-        if (options[o] && self._isBuffer(options[o]) && options[o].length === 0) {
-          return delete options[o];
-        }
-      });
-      options.reverse = !!options.reverse;
-      range = options.range;
-      if (isString(range)) {
-        range = range.trim();
-        if (range.length >= 2) {
-          skipStart = !options.reverse ? range[0] === "(" : range[range.length - 1] === ")";
-          skipEnd = !options.reverse ? range[range.length - 1] === ")" : range[0] === "(";
-          range = range.substring(1, range.length - 1);
-          range = range.split(",").map(function(item) {
-            item = item.trim();
-            if (item === "") {
-              item = null;
-            }
-            return item;
-          });
-          if (!options.reverse) {
-            start = range[0], end = range[1];
-            startOp = 'gt';
-            endOp = 'lt';
-          } else {
-            end = range[0], start = range[1];
-            startOp = 'lt';
-            endOp = 'gt';
-          }
-          if (!skipStart) {
-            startOp = startOp + 'e';
-          }
-          if (!skipEnd) {
-            endOp = endOp + 'e';
-          }
-          options[startOp] = start;
-          options[endOp] = end;
-        }
-      }
-      options.keys = options.keys !== false;
-      options.values = options.values !== false;
-      options.limit = ("limit" in options ? options.limit : -1);
-      options.keyAsBuffer = options.keyAsBuffer === true;
-      options.valueAsBuffer = options.valueAsBuffer === true;
-      return options;
     };
 
     AbstractNoSQL.prototype.IteratorClass = AbstractIterator;
@@ -881,7 +878,6 @@
       if (typeof options !== "object") {
         options = {};
       }
-      options = this._setupIteratorOptions(options);
       if (typeof this._iterator === "function") {
         return this._iterator(options);
       }
@@ -960,6 +956,8 @@
     return AbstractNoSQL;
 
   })();
+
+  module.exports.AbstractNoSQL = AbstractNoSQL;
 
   module.exports.AbstractLevelDOWN = AbstractNoSQL;
 

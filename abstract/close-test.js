@@ -6,7 +6,7 @@ module.exports.close = function (leveldown, test, testCommon) {
       t.error(err)
       t.throws(
           db.close.bind(db, 'foo')
-        , { name: 'Error', message: 'close() requires callback function argument' }
+        , { name: 'InvalidArgumentError', message: 'close() requires callback function argument' }
         , 'non-callback close() throws'
       )
 

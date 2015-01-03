@@ -12,7 +12,7 @@ module.exports.args = function (test) {
   test('test argument-less approximateSize() throws', function (t) {
     t.throws(
         db.approximateSize.bind(db)
-      , { name: 'Error', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
+      , { name: 'InvalidArgumentError', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
       , 'no-arg approximateSize() throws'
     )
     t.end()
@@ -21,7 +21,7 @@ module.exports.args = function (test) {
   test('test callback-less, 1-arg, approximateSize() throws', function (t) {
     t.throws(
         db.approximateSize.bind(db, 'foo')
-      , { name: 'Error', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
+      , { name: 'InvalidArgumentError', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
       , 'callback-less, 1-arg approximateSize() throws'
     )
     t.end()
@@ -30,7 +30,7 @@ module.exports.args = function (test) {
   test('test callback-less, 3-arg, approximateSize() throws', function (t) {
     t.throws(
         db.approximateSize.bind(db, function () {})
-      , { name: 'Error', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
+      , { name: 'InvalidArgumentError', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
       , 'callback-only approximateSize() throws'
     )
     t.end()
@@ -39,7 +39,7 @@ module.exports.args = function (test) {
   test('test callback-only approximateSize() throws', function (t) {
     t.throws(
         db.approximateSize.bind(db, function () {})
-      , { name: 'Error', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
+      , { name: 'InvalidArgumentError', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
       , 'callback-only approximateSize() throws'
     )
     t.end()
@@ -48,7 +48,7 @@ module.exports.args = function (test) {
   test('test 1-arg + callback approximateSize() throws', function (t) {
     t.throws(
         db.approximateSize.bind(db, 'foo', function () {})
-      , { name: 'Error', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
+      , { name: 'InvalidArgumentError', message: 'approximateSize() requires valid `start`, `end` and `callback`(for async) arguments' }
       , '1-arg + callback approximateSize() throws'
     )
     t.end()
