@@ -2,8 +2,8 @@ const tap                  = require('tap')
     , sinon                = require('sinon')
     , util                 = require('abstract-object/lib/util')
     , testCommon           = require('./testCommon')
-    , AbstractLevelDOWN    = require('./').AbstractLevelDOWN
-    , AbstractIterator     = require('./').AbstractIterator
+    , AbstractLevelDOWN    = require('./')
+    , AbstractIterator     = require('abstract-iterator')
     , AbstractChainedBatch = require('./').AbstractChainedBatch
 
 
@@ -591,7 +591,7 @@ tap.test('test clear() extensibility', function (t) {
 })
 
 tap.test('test iterator() extensibility', function (t) {
-  var spy = sinon.spy()
+  var spy = sinon.spy(function(db){this.db=db})
     , expectedOptions = { options: 1}
     , test
 
@@ -601,15 +601,15 @@ tap.test('test iterator() extensibility', function (t) {
 
   util.inherits(Test, AbstractLevelDOWN)
 
-  Test.prototype._iterator = spy
+  Test.prototype.IteratorClass = spy
 
   test = new Test('foobar')
   test.iterator({ options: 1 })
 
   t.equal(spy.callCount, 1, 'got _close() call')
-  t.equal(spy.getCall(0).thisValue, test, '`this` on _close() was correct')
-  t.equal(spy.getCall(0).args.length, 1, 'got one arguments')
-  t.deepEqual(spy.getCall(0).args[0], expectedOptions, 'got expected options argument')
+  t.equal(spy.getCall(0).thisValue.db, test, '`this` on _close() was correct')
+  t.equal(spy.getCall(0).args.length, 2, 'got 2 arguments')
+  t.deepEqual(spy.getCall(0).args[1], expectedOptions, 'got expected options argument')
   t.end()
 })
 
