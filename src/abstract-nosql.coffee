@@ -9,7 +9,7 @@ util                  = require("abstract-object/lib/util")
 Codec                 = require("buffer-codec")
 utf8ByteLength        = Codec.getByteLen
 Errors                = require("./abstract-error")
-AbstractIterator      = require("./abstract-iterator")
+try AbstractIterator  = require("abstract-iterator")
 AbstractChainedBatch  = require("./abstract-chained-batch")
 setImmediate          = global.setImmediate or process.nextTick
 
@@ -575,8 +575,12 @@ module.exports = class AbstractNoSQL
   IteratorClass: AbstractIterator
   iterator: (options) ->
     options = {}  unless typeof options is "object"
-    return @_iterator(options)  if typeof @_iterator is "function"
-    new @IteratorClass(this, options)
+    if @IteratorClass
+      return new @IteratorClass(this, options)
+    else if typeof @_iterator is "function"
+      console.error "_iterator is deprecated. please use the IteratorClass instead."
+      return @_iterator(options)
+    throw new NotImplementedError()
 
   _chainedBatch: ->
     new AbstractChainedBatch(this)
@@ -620,6 +624,12 @@ module.exports = class AbstractNoSQL
   createWriteStream: @::writeStream
 
 module.exports.AbstractNoSQL = AbstractNoSQL
-module.exports.AbstractLevelDOWN = AbstractNoSQL
-module.exports.AbstractIterator = AbstractIterator
+module.exports.__defineGetter__ "AbstractLevelDOWN", ->
+  console.error "AbstractLevelDOWN is deprecated. use AbstractNoSQL instead."
+  AbstractNoSQL
+module.exports.__defineGetter__ "AbstractIterator", ->
+  console.error "AbstractIterator is deprecated. it's moved to abstract-iterator."
+  console.error "first `npm install abstract-iterator`" unless AbstractIterator
+  AbstractIterator
+#module.exports.AbstractIterator = AbstractIterator
 module.exports.AbstractChainedBatch = AbstractChainedBatch

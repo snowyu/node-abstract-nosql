@@ -26,7 +26,9 @@
 
   Errors = require("./abstract-error");
 
-  AbstractIterator = require("./abstract-iterator");
+  try {
+    AbstractIterator = require("abstract-iterator");
+  } catch (_error) {}
 
   AbstractChainedBatch = require("./abstract-chained-batch");
 
@@ -878,10 +880,13 @@
       if (typeof options !== "object") {
         options = {};
       }
-      if (typeof this._iterator === "function") {
+      if (this.IteratorClass) {
+        return new this.IteratorClass(this, options);
+      } else if (typeof this._iterator === "function") {
+        console.error("_iterator is deprecated. please use the IteratorClass instead.");
         return this._iterator(options);
       }
-      return new this.IteratorClass(this, options);
+      throw new NotImplementedError();
     };
 
     AbstractNoSQL.prototype._chainedBatch = function() {
@@ -959,9 +964,18 @@
 
   module.exports.AbstractNoSQL = AbstractNoSQL;
 
-  module.exports.AbstractLevelDOWN = AbstractNoSQL;
+  module.exports.__defineGetter__("AbstractLevelDOWN", function() {
+    console.error("AbstractLevelDOWN is deprecated. use AbstractNoSQL instead.");
+    return AbstractNoSQL;
+  });
 
-  module.exports.AbstractIterator = AbstractIterator;
+  module.exports.__defineGetter__("AbstractIterator", function() {
+    console.error("AbstractIterator is deprecated. it's moved to abstract-iterator.");
+    if (!AbstractIterator) {
+      console.error("first `npm install abstract-iterator`");
+    }
+    return AbstractIterator;
+  });
 
   module.exports.AbstractChainedBatch = AbstractChainedBatch;
 
