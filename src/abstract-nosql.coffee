@@ -61,6 +61,7 @@ module.exports = class AbstractNoSQL
         else
           throw err
     throw new NotImplementedError()
+  isExistSync: @::isExistsSync
 
   getSync: (key, options) ->
     if @_getSync
