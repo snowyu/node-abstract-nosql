@@ -32,6 +32,9 @@ Additionally, all methods provide argument checking and sensible defaults for op
 
 ## Changes(diference from abstract-leveldown)
 
++ Can add the encoding key/value ability via two ways:
+  * see the [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) package.
+  * see the [encoding-iterator](https://github.com/snowyu/node-encoding-iterator) package.
 + getBuffer/getBufferSync(key, destBuffer, options) optional method.
   * the key's value will be put into the destBuffer if destBuffer is not null.
   * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
@@ -51,6 +54,7 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 + Add isExists/isExistsSync optional method to test key whether exists.
   * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
+  * iExist/iExistSync is the alias of iExists/iExistsSync.
 + the AbstractNoSQL class supports events now.
   * emit `'open'` and `'ready'` event after the database is opened.
   * emit `'closed'` event after the database is closed.
