@@ -1,7 +1,7 @@
 {
   "name": "abstract-nosql",
   "description": "An abstract prototype for nosql database with sync and streamable (LevelDOWN API)",
-  "version": "1.10.2",
+  "version": "1.10.3",
   "contributors": [
     "Riceball LEE <snowyu.lee@gmail.com> (https://github.com/snowyu)",
     "Rod Vagg <r@va.gg> (https://github.com/rvagg)",

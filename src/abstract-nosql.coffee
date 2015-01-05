@@ -117,12 +117,11 @@ module.exports = class AbstractNoSQL
     if @_batchSync
       options = {} unless options?
       unless Array.isArray(operations)
-        vError = new Error("batch(operations) requires an array argument")
-        return callback(vError)
+        throw new InvalidArgumentError("batch(operations) requires an array argument")
       for e in operations
         continue unless typeof e is "object"
-        return callback(err) if err = @_checkKey(e.type, "type")
-        return callback(err) if err = @_checkKey(e.key, "key")
+        throw err if err = @_checkKey(e.type, "type")
+        throw err if err = @_checkKey(e.key, "key")
       result = @_batchSync(operations, options)
       return result
     throw new NotImplementedError()
@@ -540,7 +539,7 @@ module.exports = class AbstractNoSQL
   batchAsync: (array, options, callback) ->
     options = {} unless options?
     unless Array.isArray(array)
-      vError = new Error("batch(array) requires an array argument")
+      vError = new InvalidArgumentError("batch(array) requires an array argument")
       return callback(vError)
     for e in array
       continue unless typeof e is "object"

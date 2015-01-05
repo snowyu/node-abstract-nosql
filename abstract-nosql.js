@@ -107,6 +107,8 @@
       throw new NotImplementedError();
     };
 
+    AbstractNoSQL.prototype.isExistSync = AbstractNoSQL.prototype.isExistsSync;
+
     AbstractNoSQL.prototype.getSync = function(key, options) {
       var err, result;
       if (this._getSync) {
@@ -192,14 +194,13 @@
     };
 
     AbstractNoSQL.prototype.batchSync = function(operations, options) {
-      var e, err, result, vError, _i, _len;
+      var e, err, result, _i, _len;
       if (this._batchSync) {
         if (options == null) {
           options = {};
         }
         if (!Array.isArray(operations)) {
-          vError = new Error("batch(operations) requires an array argument");
-          return callback(vError);
+          throw new InvalidArgumentError("batch(operations) requires an array argument");
         }
         for (_i = 0, _len = operations.length; _i < _len; _i++) {
           e = operations[_i];
@@ -207,10 +208,10 @@
             continue;
           }
           if (err = this._checkKey(e.type, "type")) {
-            return callback(err);
+            throw err;
           }
           if (err = this._checkKey(e.key, "key")) {
-            return callback(err);
+            throw err;
           }
         }
         result = this._batchSync(operations, options);
@@ -817,7 +818,7 @@
         options = {};
       }
       if (!Array.isArray(array)) {
-        vError = new Error("batch(array) requires an array argument");
+        vError = new InvalidArgumentError("batch(array) requires an array argument");
         return callback(vError);
       }
       for (_i = 0, _len = array.length; _i < _len; _i++) {
