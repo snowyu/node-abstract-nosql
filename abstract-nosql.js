@@ -246,6 +246,7 @@
         }
         options.createIfMissing = options.createIfMissing !== false;
         options.errorIfExists = !!options.errorIfExists;
+        this.emit("opening", options);
         result = this._openSync(options);
         if (result) {
           this.setOpened(true, options);
@@ -261,6 +262,7 @@
     AbstractNoSQL.prototype.closeSync = function() {
       var result;
       if (this._closeSync) {
+        this.emit("closing");
         result = this._closeSync();
         if (result) {
           this.setOpened(false);
@@ -589,6 +591,7 @@
       options.createIfMissing = options.createIfMissing !== false;
       options.errorIfExists = !!options.errorIfExists;
       that = this;
+      this.emit("opening", options);
       return this._open(options, function(err, result) {
         if (err == null) {
           that.setOpened(true, options);
@@ -614,6 +617,7 @@
       if (callback) {
         if (typeof callback === "function") {
           that = this;
+          this.emit("closing");
           return this._close(function(err, result) {
             if (err == null) {
               that.setOpened(false);

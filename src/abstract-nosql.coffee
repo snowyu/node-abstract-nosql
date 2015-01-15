@@ -141,6 +141,7 @@ module.exports = class AbstractNoSQL
       options = @_options || {} unless options?
       options.createIfMissing = options.createIfMissing isnt false
       options.errorIfExists = !!options.errorIfExists
+      @emit "opening", options
       result = @_openSync(options)
       @setOpened true, options if result
       result = @ if result
@@ -151,6 +152,7 @@ module.exports = class AbstractNoSQL
   #if successful should return true.
   closeSync: ->
     if @_closeSync
+      @emit "closing"
       result = @_closeSync()
       @setOpened false if result
       return result
@@ -403,6 +405,7 @@ module.exports = class AbstractNoSQL
     options.createIfMissing = options.createIfMissing isnt false
     options.errorIfExists = !!options.errorIfExists
     that = this
+    @emit "opening", options
     @_open options, (err, result) ->
       that.setOpened true, options if not err?
       callback err, result
@@ -419,10 +422,10 @@ module.exports = class AbstractNoSQL
     if callback
       if typeof callback is "function"
         that = this
+        @emit "closing"
         @_close (err, result) ->
           that.setOpened false if not err?
           callback err, result
-
       else
         throw new InvalidArgumentError("close() requires callback function argument")
     else
