@@ -418,16 +418,18 @@ module.exports = class AbstractNoSQL
     else
       @openSync options
 
+  closeAsync: (callback) ->
+    if typeof callback is "function"
+      that = this
+      @emit "closing"
+      @_close (err, result) ->
+        that.setOpened false if not err?
+        callback err, result
+    else
+      throw new InvalidArgumentError("close() requires callback function argument")
   close: (callback) ->
     if callback
-      if typeof callback is "function"
-        that = this
-        @emit "closing"
-        @_close (err, result) ->
-          that.setOpened false if not err?
-          callback err, result
-      else
-        throw new InvalidArgumentError("close() requires callback function argument")
+      @closeAsync callback
     else
       @closeSync()
 

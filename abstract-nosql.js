@@ -612,21 +612,25 @@
       }
     };
 
-    AbstractNoSQL.prototype.close = function(callback) {
+    AbstractNoSQL.prototype.closeAsync = function(callback) {
       var that;
+      if (typeof callback === "function") {
+        that = this;
+        this.emit("closing");
+        return this._close(function(err, result) {
+          if (err == null) {
+            that.setOpened(false);
+          }
+          return callback(err, result);
+        });
+      } else {
+        throw new InvalidArgumentError("close() requires callback function argument");
+      }
+    };
+
+    AbstractNoSQL.prototype.close = function(callback) {
       if (callback) {
-        if (typeof callback === "function") {
-          that = this;
-          this.emit("closing");
-          return this._close(function(err, result) {
-            if (err == null) {
-              that.setOpened(false);
-            }
-            return callback(err, result);
-          });
-        } else {
-          throw new InvalidArgumentError("close() requires callback function argument");
-        }
+        return this.closeAsync(callback);
       } else {
         return this.closeSync();
       }
