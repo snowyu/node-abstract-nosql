@@ -34,7 +34,7 @@
   ],
   "main": "./abstract-nosql.js",
   "dependencies": {
-    "abstract-object": "1.x",
+    "abstract-object": ">=1.6.1",
     "buffer-codec": ">=1.3.1",
     "xtend": "~3.0.0"
   },

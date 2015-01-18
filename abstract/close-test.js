@@ -4,10 +4,9 @@ module.exports.close = function (leveldown, test, testCommon) {
 
     db.open(function (err) {
       t.error(err)
-      t.throws(
+      t.doesNotThrow(
           db.close.bind(db, 'foo')
-        , { name: 'InvalidArgumentError', message: 'close() requires callback function argument' }
-        , 'non-callback close() throws'
+        , 'non-callback close()'
       )
 
       db.close(function (err) {

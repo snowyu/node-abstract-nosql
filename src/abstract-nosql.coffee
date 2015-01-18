@@ -1,11 +1,11 @@
 # Copyright (c) 2013 Rod Vagg, MIT License
 # Copyright (c) 2014 Riceball LEE, MIT License
 xtend                 = require("xtend")
-try NoSqlStream       = require("nosql-stream")
-ReadStream            = NoSqlStream.ReadStream  if NoSqlStream
-WriteStream           = NoSqlStream.WriteStream if NoSqlStream
+try
+  NoSqlStream         = require("nosql-stream")
+  ReadStream          = NoSqlStream.ReadStream
+  WriteStream         = NoSqlStream.WriteStream
 AbstractObject        = require("abstract-object")
-util                  = require("abstract-object/lib/util")
 Codec                 = require("buffer-codec")
 utf8ByteLength        = Codec.getByteLen
 Errors                = require("./abstract-error")
@@ -18,8 +18,10 @@ NotImplementedError   = Errors.NotImplementedError
 InvalidArgumentError  = Errors.InvalidArgumentError
 OpenError             = Errors.OpenError
 CloseError            = Errors.CloseError
-inherits              = util.inherits
-isString              = util.isString
+inherits              = require("abstract-object/lib/util/inherits")
+isString              = require("abstract-object/lib/util/isString")
+isFunction            = require("abstract-object/lib/util/isFunction")
+isArray               = require("abstract-object/lib/util/isArray")
 
 module.exports = class AbstractNoSQL
   inherits AbstractNoSQL, AbstractObject
@@ -30,6 +32,11 @@ module.exports = class AbstractNoSQL
     #not all database have the location argument.
     throw new InvalidArgumentError("constructor requires a location string argument")  if location and typeof location isnt "string"
     @location = location
+  final: ->
+    if @_opened
+      if @_closeSync then @closeSync()
+      else @closeAsync()
+    @_options = null
 
   @::__defineGetter__ "opened", ->
     !!@_opened
@@ -116,7 +123,7 @@ module.exports = class AbstractNoSQL
   batchSync: (operations, options) ->
     if @_batchSync
       options = {} unless options?
-      unless Array.isArray(operations)
+      unless isArray(operations)
         throw new InvalidArgumentError("batch(operations) requires an array argument")
       for e in operations
         continue unless typeof e is "object"
@@ -410,7 +417,7 @@ module.exports = class AbstractNoSQL
       that.setOpened true, options if not err?
       callback err, result
   open: (options, callback) ->
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = undefined
     if callback
@@ -419,14 +426,13 @@ module.exports = class AbstractNoSQL
       @openSync options
 
   closeAsync: (callback) ->
-    if typeof callback is "function"
-      that = this
-      @emit "closing"
-      @_close (err, result) ->
-        that.setOpened false if not err?
-        callback err, result
-    else
-      throw new InvalidArgumentError("close() requires callback function argument")
+    that = this
+    callback = undefined unless isFunction callback
+    @emit "closing"
+    @_close (err, result) ->
+      return that.dispatchError err, callback if err
+      that.setOpened false
+      callback null, result if callback
   close: (callback) ->
     if callback
       @closeAsync callback
@@ -438,7 +444,7 @@ module.exports = class AbstractNoSQL
     key = String(key)  unless @_isBuffer(key)
     @_isExists key, options, callback
   isExists: (key, options, callback) ->
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     else
@@ -454,7 +460,7 @@ module.exports = class AbstractNoSQL
     @_getBuffer key, destBuffer, options, callback
   getBuffer: (key, destBuffer, options, callback) ->
     err = undefined
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     if callback
@@ -482,7 +488,7 @@ module.exports = class AbstractNoSQL
       callback null, result
   mGet: (keys, options, callback) ->
     err = undefined
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     else
@@ -499,7 +505,7 @@ module.exports = class AbstractNoSQL
     @_get key, options, callback
   get: (key, options, callback) ->
     err = undefined
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     if callback
@@ -518,7 +524,7 @@ module.exports = class AbstractNoSQL
 
   put: (key, value, options, callback) ->
     err = undefined
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     if callback
@@ -533,7 +539,7 @@ module.exports = class AbstractNoSQL
     @_del key, options, callback
   del: (key, options, callback) ->
     err = undefined
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
     if callback
@@ -543,7 +549,7 @@ module.exports = class AbstractNoSQL
 
   batchAsync: (array, options, callback) ->
     options = {} unless options?
-    unless Array.isArray(array)
+    unless isArray(array)
       vError = new InvalidArgumentError("batch(array) requires an array argument")
       return callback(vError)
     for e in array
@@ -553,10 +559,10 @@ module.exports = class AbstractNoSQL
     @_batch array, options, callback
   batch: (array, options, callback) ->
     return @_chainedBatch()  unless arguments.length
-    if typeof options is "function"
+    if isFunction options
       callback = options
       options = {}
-    callback = array if typeof array is "function"
+    callback = array if isFunction array
     if callback
       @batchAsync array, options, callback
     else
@@ -569,7 +575,7 @@ module.exports = class AbstractNoSQL
     end = String(end)  unless @_isBuffer(end)
     @_approximateSize start, end, callback
   approximateSize: (start, end, callback) ->
-    if not start? or not end? or typeof start is "function" or typeof end is "function"
+    if not start? or not end? or isFunction(start) or isFunction(end)
       throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments")
     if callback
       @approximateSizeAsync start, end, callback
@@ -582,7 +588,7 @@ module.exports = class AbstractNoSQL
     options = {}  unless typeof options is "object"
     if @IteratorClass
       return new @IteratorClass(this, options)
-    else if typeof @_iterator is "function"
+    else if isFunction @_iterator
       console.error "_iterator is deprecated. please use the IteratorClass instead."
       return @_iterator(options)
     throw new NotImplementedError()
