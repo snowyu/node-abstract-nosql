@@ -4,8 +4,13 @@
 [![NPM](https://nodei.co/npm-dl/abstract-nosql.png?months=6&height=3)](https://nodei.co/npm/abstract-nosql/)
 
 
-Abstract-nosql package is modified from abstract-leveldown to enhance the synchronous methods supports for development a node nosql database quickly and using easily.
-And streamable ability is added to abstract-nosql.
+Abstract-nosql package is modified from abstract-leveldown to enhance the synchronous methods supports for development a node nosql database quickly and using easily. And it make abstract-nosql modularization become possible.
+
+[abstract-nosql](https://github.com/snowyu/node-abstract-nosql) database can be extended its capabilities by adding different feature 
+addin. and you(database developer) almost have nothing to do, can have these features. The database user can be free to decide whether to add this feature.
+
+* [nosql-stream](https://github.com/snowyu/nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
+* [nosql-encoding](https://github.com/snowyu/node-nosql-encoding): key/value encoding ability.
 
 abstract-nosql Interface is neutral. There is no bias neither synchronous bias nor asynchronous bias. So that more people choose according to their own manner. For myself, I am not very concerned about the performance of javascript, I am more concerned about the efficiency of its development, as well as through functional programming (functions, closures such a simple concept) extend out of the rich and wonderful world. I still can not help but to think about performance issues. Asynchronous itself produces a small gap, because javascript reason this gap is magnified.
 
@@ -17,24 +22,12 @@ ES6 generator or [node-fibers](https://github.com/laverdet/node-fibers) could be
 The setImmediate package could be extended to use different implementation(setImmediate, nextTick, ES6 generator, node-fiber) in different environment.
 So the simulated asynchronous uses this way, if you do not implement the asynchronous methods.
 
-## About LevelDOWN
-
-An abstract prototype matching the **[LevelDOWN](https://github.com/rvagg/node-leveldown/)** API. Useful for extending **[LevelUP](https://github.com/rvagg/node-levelup)** functionality by providing a replacement to LevelDOWN.
-
-As of version 0.7, LevelUP allows you to pass a `'db'` option when you create a new instance. This will override the default LevelDOWN store with a LevelDOWN API compatible object.
-
-**Abstract LevelDOWN** provides a simple, operational *noop* base prototype that's ready for extending. By default, all operations have sensible "noops" (operations that essentially do nothing). For example, simple operations such as `.open(callback)` and `.close(callback)` will simply invoke the callback (on a *next tick*). More complex operations  perform sensible actions, for example: `.get(key, callback)` will always return a `'NotFound'` `Error` on the callback.
-
-You add functionality by implementing the underscore versions of the operations. For example, to implement a `put()` operation you add a `_put()` method to your object. Each of these underscore methods override the default *noop* operations and are always provided with **consistent arguments**, regardless of what is passed in by the client.
-
-Additionally, all methods provide argument checking and sensible defaults for optional arguments. All bad-argument errors are compatible with LevelDOWN (they pass the LevelDOWN method arguments tests). For example, if you call `.open()` without a callback argument you'll get an `Error('open() requires a callback argument')`. Where optional arguments are involved, your underscore methods will receive sensible defaults. A `.get(key, callback)` will pass through to a `._get(key, options, callback)` where the `options` argument is an empty object.
-
 
 ## Changes(diference from abstract-leveldown)
 
-+ Can add the encoding key/value ability via two ways:
-  * see the [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) package.
-  * see the [encoding-iterator](https://github.com/snowyu/node-encoding-iterator) package.
+* the modularization with abstract-nosql
+  * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding)
+  * [nosql-stream](https://github.com/snowyu/nosql-stream)
 + getBuffer/getBufferSync(key, destBuffer, options) optional method.
   * the key's value will be put into the destBuffer if destBuffer is not null.
   * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
@@ -42,8 +35,6 @@ Additionally, all methods provide argument checking and sensible defaults for op
   * return the byte size of value.
   * the will use the get/getSync to simulate if no \_getBuffer implemented.
 - Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
-+ Add the stream ability
-  * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
