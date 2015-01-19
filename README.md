@@ -9,7 +9,7 @@ Abstract-nosql package is modified from abstract-leveldown to enhance the synchr
 [abstract-nosql](https://github.com/snowyu/node-abstract-nosql) database can be extended its capabilities by adding different feature 
 addin. and you(database developer) almost have nothing to do, can have these features. The database user can be free to decide whether to add this feature.
 
-* [nosql-stream](https://github.com/snowyu/nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
+* [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
 * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding): key/value encoding ability.
 
 abstract-nosql Interface is neutral. There is no bias neither synchronous bias nor asynchronous bias. So that more people choose according to their own manner. For myself, I am not very concerned about the performance of javascript, I am more concerned about the efficiency of its development, as well as through functional programming (functions, closures such a simple concept) extend out of the rich and wonderful world. I still can not help but to think about performance issues. Asynchronous itself produces a small gap, because javascript reason this gap is magnified.
@@ -29,7 +29,7 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
 
 * the modularization(feature plugin) with abstract-nosql
   * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding)
-  * [nosql-stream](https://github.com/snowyu/nosql-stream)
+  * [nosql-stream](https://github.com/snowyu/node-nosql-stream)
 * Let the user decide whether to use these features.
 * (`broken changes`) remove the streamable feature from buildin. this is a plugin now.
 * (`broken changes`) defaults to disable asBuffer option.
@@ -49,7 +49,7 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
   * the will use the get/getSync to simulate if no \_getBuffer implemented.
 - Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
 + Add the stream ability
-  * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
+  * You should install [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
@@ -143,11 +143,11 @@ Once implements the [AbstractIterator](https://github.com/snowyu/node-abstract-i
 
 the db should be the streamable.
 
-But, you should install the [nosql-stream](https://github.com/snowyu/nosql-stream) package first.
+But, you should install the [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first.
 
     npm install nosql-stream
 
-see [nosql-stream](https://snowyu/github.com/nosql-stream) for more details 
+see [nosql-stream](https://snowyu/github.com/node-nosql-stream) for more details 
 
 ## Extensible API
 
