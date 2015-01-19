@@ -442,7 +442,7 @@ db.put('foo', 'bar', function (err) {
 })
 ```
 
-See [MemDOWN-sync](https://github.com/snowyu/node-memdown-sync/) if you are looking for a complete in-memory replacement for AbstractNoSql database.
+See [nosql-memdb](https://github.com/snowyu/node-nosql-memdb/) if you are looking for a complete in-memory replacement for AbstractNoSql database.
 
 
 <a name="contributing"></a>
