@@ -40,7 +40,6 @@
   },
   "devDependencies": {
     "abstract-iterator": ">=0.10.0",
-    "nosql-stream": ">=1.2.2",
     "rimraf": "*",
     "sinon": "*",
     "tap": "*"
