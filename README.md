@@ -25,9 +25,20 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
 
 ## Changes(diference from abstract-leveldown)
 
-* the modularization with abstract-nosql
+### v2.x.x
+
+* the modularization(feature plugin) with abstract-nosql
   * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding)
   * [nosql-stream](https://github.com/snowyu/nosql-stream)
+* Let the user decide whether to use these feature.
+* `broken changes` 
+  - remove the streamable feature from buildin. this is a plugin now.
+
+### V1.x.x
+
++ Can add the encoding key/value ability via two ways:
+  * see the [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) package.
+  * see the [encoding-iterator](https://github.com/snowyu/node-encoding-iterator) package.
 + getBuffer/getBufferSync(key, destBuffer, options) optional method.
   * the key's value will be put into the destBuffer if destBuffer is not null.
   * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
@@ -35,6 +46,8 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
   * return the byte size of value.
   * the will use the get/getSync to simulate if no \_getBuffer implemented.
 - Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
++ Add the stream ability
+  * You should install [nosql-stream](https://github.com/snowyu/nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
 * DB constructor allows no location.
 * Add IteratorClass supports.
