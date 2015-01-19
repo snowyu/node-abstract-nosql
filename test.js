@@ -148,7 +148,7 @@ tap.test('test close() extensibility', function (t) {
 tap.test('test get() extensibility', function (t) {
   var spy = sinon.spy()
     , expectedCb = function () {}
-    , expectedOptions = { asBuffer: true }
+    , expectedOptions = { asBuffer: false }
     , expectedKey = 'a key'
     , test
 

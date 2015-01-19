@@ -497,7 +497,7 @@ module.exports = class AbstractNoSQL
     options = {} unless options?
     return callback(err) if err = @_checkKey(key, "key")
     key = String(key)  unless @_isBuffer(key)
-    options.asBuffer = options.asBuffer isnt false
+    options.asBuffer = options.asBuffer is true
     @_get key, options, callback
   get: (key, options, callback) ->
     err = undefined

@@ -93,15 +93,16 @@ module.exports.batch = function (test) {
     db.batch([{ type: 'put', key: 'foo', value: 'bar' }], function (err) {
       t.error(err)
 
-      db.get('foo', function (err, value) {
+      db.get('foo', function (err, result) {
         t.error(err)
+        /*
         var result
         if (isTypedArray(value)) {
           result = String.fromCharCode.apply(null, new Uint16Array(value))
         } else {
           t.ok(typeof Buffer != 'undefined' && value instanceof Buffer)
           result = value.toString()
-        }
+        }*/
         t.equal(result, 'bar')
         t.end()
       })
@@ -123,15 +124,16 @@ module.exports.batch = function (test) {
               t.end()
           }
 
-      db.get('foobatch1', function (err, value) {
+      db.get('foobatch1', function (err, result) {
         t.error(err)
+        /*
         var result
         if (isTypedArray(value)) {
           result = String.fromCharCode.apply(null, new Uint16Array(value))
         } else {
           t.ok(typeof Buffer != 'undefined' && value instanceof Buffer)
           result = value.toString()
-        }
+        }*/
         t.equal(result, 'bar1')
         done()
       })
@@ -143,15 +145,8 @@ module.exports.batch = function (test) {
         done()
       })
 
-      db.get('foobatch3', function (err, value) {
+      db.get('foobatch3', function (err, result) {
         t.error(err)
-        var result
-        if (isTypedArray(value)) {
-          result = String.fromCharCode.apply(null, new Uint16Array(value))
-        } else {
-          t.ok(typeof Buffer != 'undefined' && value instanceof Buffer)
-          result = value.toString()
-        }
         t.equal(result, 'bar3')
         done()
       })

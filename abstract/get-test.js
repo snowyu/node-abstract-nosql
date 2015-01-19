@@ -17,10 +17,11 @@ module.exports.get = function (test) {
   test('test simple get()', function (t) {
     db.put('foo', 'bar', function (err) {
       t.error(err)
-      db.get('foo', function (err, value) {
+      db.get('foo', function (err, result) {
         t.error(err)
-        t.ok(typeof value !== 'string', 'should not be string by default')
+        t.ok(typeof result === 'string', 'should be string by default')
 
+        /*
         var result
         if (isTypedArray(value)) {
           result = String.fromCharCode.apply(null, new Uint16Array(value))
@@ -32,13 +33,15 @@ module.exports.get = function (test) {
             t.error(e, 'should not throw when converting value to a string')
           }
         }
+        */
 
         t.equal(result, 'bar')
 
-        db.get('foo', {}, function (err, value) { // same but with {}
+        db.get('foo', {}, function (err, result) { // same but with {}
           t.error(err)
-          t.ok(typeof value !== 'string', 'should not be string by default')
+          t.ok(typeof result === 'string', 'should be string by default')
 
+          /*
           var result
           if (isTypedArray(value)) {
             result = String.fromCharCode.apply(null, new Uint16Array(value))
@@ -49,7 +52,7 @@ module.exports.get = function (test) {
             } catch (e) {
               t.error(e, 'should not throw when converting value to a string')
             }
-          }
+          }*/
 
           t.equal(result, 'bar')
 

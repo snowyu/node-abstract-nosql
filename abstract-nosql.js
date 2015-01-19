@@ -746,7 +746,7 @@
       if (!this._isBuffer(key)) {
         key = String(key);
       }
-      options.asBuffer = options.asBuffer !== false;
+      options.asBuffer = options.asBuffer === true;
       return this._get(key, options, callback);
     };
 
