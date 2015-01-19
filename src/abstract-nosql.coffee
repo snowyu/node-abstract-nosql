@@ -1,10 +1,6 @@
 # Copyright (c) 2013 Rod Vagg, MIT License
 # Copyright (c) 2014 Riceball LEE, MIT License
 xtend                 = require("xtend")
-try
-  NoSqlStream         = require("nosql-stream")
-  ReadStream          = NoSqlStream.ReadStream
-  WriteStream         = NoSqlStream.WriteStream
 AbstractObject        = require("abstract-object")
 Codec                 = require("buffer-codec")
 utf8ByteLength        = Codec.getByteLen
@@ -609,30 +605,6 @@ module.exports = class AbstractNoSQL
 
   isOpen: ->
     !!@_opened
-  readStream: (options, makeData)->
-    if (ReadStream)
-      opt = xtend(@_options, options)
-      ReadStream @, opt, makeData
-    else
-      console.error "please `npm install nosql-stream` first"
-  createReadStream: @::readStream
-  valueStream: (options, makeData)->
-    opt = xtend(options)
-    opt.keys = false
-    @readStream opt, makeData
-  createValueStream: @::valueStream
-  keyStream: (options, makeData)->
-    opt = xtend(options)
-    opt.values = false
-    @readStream opt, makeData
-  createKeyStream: @::keyStream
-  writeStream: (options)->
-    if (WriteStream)
-      opt = xtend(@_options, options)
-      WriteStream @, opt
-    else
-      console.error "please `npm install nosql-stream` first"
-  createWriteStream: @::writeStream
 
 module.exports.AbstractNoSQL = AbstractNoSQL
 module.exports.__defineGetter__ "AbstractLevelDOWN", ->
