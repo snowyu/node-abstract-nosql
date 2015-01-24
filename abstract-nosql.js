@@ -45,14 +45,14 @@
       AbstractNoSQL.__super__.constructor.apply(this, arguments);
     }
 
-    AbstractNoSQL.prototype.init = function(location) {
+    AbstractNoSQL.prototype.initialize = function(location) {
       if (location && typeof location !== "string") {
         throw new InvalidArgumentError("constructor requires a location string argument");
       }
       return this.location = location;
     };
 
-    AbstractNoSQL.prototype.final = function() {
+    AbstractNoSQL.prototype.finalize = function() {
       if (this._opened) {
         if (this._closeSync) {
           this.closeSync();

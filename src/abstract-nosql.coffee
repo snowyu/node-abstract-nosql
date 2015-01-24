@@ -24,11 +24,11 @@ module.exports = class AbstractNoSQL
 
   constructor: ->
     super
-  init:(location) ->
+  initialize:(location) ->
     #not all database have the location argument.
     throw new InvalidArgumentError("constructor requires a location string argument")  if location and typeof location isnt "string"
     @location = location
-  final: ->
+  finalize: ->
     if @_opened
       if @_closeSync then @closeSync()
       else @closeAsync()
@@ -70,7 +70,7 @@ module.exports = class AbstractNoSQL
     if @_getSync
       options = {} unless options?
       throw err if err = @_checkKey(key, "key")
-      key = String(key)  unless @_isBuffer(key)
+      key = String(key)  unless @_isBuffer(key) #TODO should move to low-level db.
       result = @_getSync(key, options)
       return result
     throw new NotImplementedError()

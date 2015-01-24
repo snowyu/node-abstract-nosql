@@ -76,8 +76,8 @@ tap.test('test core extensibility', function (t) {
 tap.test('test core init extensibility', function (t) {
   function Test (location) {
   }
-  Test.prototype.init = function(location) {
-    Test.__super__.init.call(this, location);
+  Test.prototype.initialize = function(location) {
+    Test.__super__.initialize.call(this, location);
     t.equal(this.location, location, 'location set on `this`')
     t.end()
   }
