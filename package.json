@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/snowyu/node-abstract-nosql",
   "keywords": [
+    "abstract",
+    "abstract-nosql",
     "nosql",
     "database",
     "stream",
