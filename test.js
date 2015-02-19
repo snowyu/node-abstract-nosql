@@ -1,15 +1,17 @@
 const tap                  = require('tap')
     , sinon                = require('sinon')
-    , util                 = require('abstract-object/lib/util')
+    , util                 = require('util-ex')
     , testCommon           = require('./testCommon')
-    , AbstractLevelDOWN    = require('./')
+    , AbstractNoSql        = require('./')
     , AbstractIterator     = require('abstract-iterator')
     , AbstractChainedBatch = require('./').AbstractChainedBatch
 
 
 function factory (location) {
-  return new AbstractLevelDOWN(location)
+  return new AbstractNoSql(location)
 }
+
+require('./test-event')
 
 /*** compatibility with basic LevelDOWN API ***/
 
@@ -63,12 +65,12 @@ require('./abstract/iterator-test').sequence(tap.test)
 
 tap.test('test core extensibility', function (t) {
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
     t.equal(this.location, location, 'location set on `this`')
     t.end()
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   ;new Test('foobar')
 })
@@ -82,7 +84,7 @@ tap.test('test core init extensibility', function (t) {
     t.end()
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   ; util.createObject(Test, 'foobar')
 })
@@ -94,10 +96,10 @@ tap.test('test open() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._open = spy
 
@@ -128,10 +130,10 @@ tap.test('test close() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._close = spy
 
@@ -153,10 +155,10 @@ tap.test('test get() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._get = spy
 
@@ -192,10 +194,10 @@ tap.test('test getbuffer() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._getBuffer = spy
 
@@ -232,10 +234,10 @@ tap.test('test mGet() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._mGet = spy
 
@@ -270,10 +272,10 @@ tap.test('test del() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._del = spy
 
@@ -307,10 +309,10 @@ tap.test('test put() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._put = spy
 
@@ -345,10 +347,10 @@ tap.test('test approximateSize() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._approximateSize = spy
 
@@ -372,10 +374,10 @@ tap.test('test batch() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._batch = spy
 
@@ -418,10 +420,10 @@ tap.test('test chained batch() (array) extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._batch = spy
 
@@ -457,10 +459,10 @@ tap.test('test chained batch() (custom _chainedBatch) extensibility', function (
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype._chainedBatch = spy
 
@@ -596,10 +598,10 @@ tap.test('test iterator() extensibility', function (t) {
     , test
 
   function Test (location) {
-    AbstractLevelDOWN.call(this, location)
+    AbstractNoSql.call(this, location)
   }
 
-  util.inherits(Test, AbstractLevelDOWN)
+  util.inherits(Test, AbstractNoSql)
 
   Test.prototype.IteratorClass = spy
 

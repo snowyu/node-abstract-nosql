@@ -1,4 +1,4 @@
-# Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png?branch=master)](http://travis-ci.org/snowyu/node-abstract-nosql)
+### Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png?branch=master)](http://travis-ci.org/snowyu/node-abstract-nosql)
 
 [![NPM](https://nodei.co/npm/abstract-nosql.png?downloads=true&downloadRank=true)](https://nodei.co/npm/abstract-nosql/)
 [![NPM](https://nodei.co/npm-dl/abstract-nosql.png?months=6&height=3)](https://nodei.co/npm/abstract-nosql/)
@@ -6,7 +6,7 @@
 
 Abstract-nosql package is modified from abstract-leveldown to enhance the synchronous methods supports for development a node nosql database quickly and using easily. And it make abstract-nosql modularization become possible.
 
-[abstract-nosql](https://github.com/snowyu/node-abstract-nosql) database can be extended its capabilities by adding different feature 
+[abstract-nosql](https://github.com/snowyu/node-abstract-nosql) database can be extended its capabilities by adding different feature
 addin. and you(database developer) almost have nothing to do, can have these features. The database user can be free to decide whether to add this feature.
 
 * [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
@@ -24,6 +24,12 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
 
 
 ## Changes(diference from abstract-leveldown)
+
+### v2.1.x
+
+* **<broken change>**: separate event-able ability from AbstractNoSql
++ add the eventable to open, close, put, get, mGet, del, batch methods
+  * can hook the 'putting', 'getting, 'mGetting', 'deleting' events.
 
 ### v2.x.x
 
@@ -147,7 +153,7 @@ But, you should install the [nosql-stream](https://github.com/snowyu/node-nosql-
 
     npm install nosql-stream
 
-see [nosql-stream](https://snowyu/github.com/node-nosql-stream) for more details 
+see [nosql-stream](https://snowyu/github.com/node-nosql-stream) for more details
 
 ## Extensible API
 
@@ -292,7 +298,7 @@ FakeNoSqlDatabase.prototype._openSync = function (options) {
 }
 
 FakeNoSqlDatabase.prototype._putSync = function (key, value, options) {
-  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
+  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery
   this._store[key] = value
   return true
 }
@@ -395,7 +401,7 @@ FakeNoSqlDatabase.prototype._open = function (options, callback) {
 }
 
 FakeNoSqlDatabase.prototype._put = function (key, value, options, callback) {
-  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery 
+  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery
   this._store[key] = value
   process.nextTick(callback)
 }

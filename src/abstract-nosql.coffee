@@ -14,10 +14,10 @@ NotImplementedError   = Errors.NotImplementedError
 InvalidArgumentError  = Errors.InvalidArgumentError
 OpenError             = Errors.OpenError
 CloseError            = Errors.CloseError
-inherits              = require("abstract-object/lib/util/inherits")
-isString              = require("abstract-object/lib/util/isString")
-isFunction            = require("abstract-object/lib/util/isFunction")
-isArray               = require("abstract-object/lib/util/isArray")
+inherits              = require("inherits-ex/lib/inherits")
+isString              = require("util-ex/lib/is/type/string")
+isFunction            = require("util-ex/lib/is/type/function")
+isArray               = require("util-ex/lib/is/type/array")
 
 module.exports = class AbstractNoSQL
   inherits AbstractNoSQL, AbstractObject
@@ -41,11 +41,8 @@ module.exports = class AbstractNoSQL
     if aValue
       @_opened = true
       @_options = options if options
-      @emit "ready"
-      @emit "open"
     else
       @_opened = false
-      @emit "closed"
 
   #the optimal low-level sync functions:
   isExistsSync: (key, options) ->
@@ -144,7 +141,6 @@ module.exports = class AbstractNoSQL
       options = @_options || {} unless options?
       options.createIfMissing = options.createIfMissing isnt false
       options.errorIfExists = !!options.errorIfExists
-      @emit "opening", options
       result = @_openSync(options)
       @setOpened true, options if result
       result = @ if result
@@ -155,7 +151,6 @@ module.exports = class AbstractNoSQL
   #if successful should return true.
   closeSync: ->
     if @_closeSync
-      @emit "closing"
       result = @_closeSync()
       @setOpened false if result
       return result
@@ -408,7 +403,6 @@ module.exports = class AbstractNoSQL
     options.createIfMissing = options.createIfMissing isnt false
     options.errorIfExists = !!options.errorIfExists
     that = this
-    @emit "opening", options
     @_open options, (err, result) ->
       that.setOpened true, options if not err?
       callback err, result
@@ -424,9 +418,8 @@ module.exports = class AbstractNoSQL
   closeAsync: (callback) ->
     that = this
     callback = undefined unless isFunction callback
-    @emit "closing"
     @_close (err, result) ->
-      return that.dispatchError err, callback if err
+      return callback err if err
       that.setOpened false
       callback null, result if callback
   close: (callback) ->

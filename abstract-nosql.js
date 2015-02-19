@@ -30,13 +30,13 @@
 
   CloseError = Errors.CloseError;
 
-  inherits = require("abstract-object/lib/util/inherits");
+  inherits = require("inherits-ex/lib/inherits");
 
-  isString = require("abstract-object/lib/util/isString");
+  isString = require("util-ex/lib/is/type/string");
 
-  isFunction = require("abstract-object/lib/util/isFunction");
+  isFunction = require("util-ex/lib/is/type/function");
 
-  isArray = require("abstract-object/lib/util/isArray");
+  isArray = require("util-ex/lib/is/type/array");
 
   module.exports = AbstractNoSQL = (function() {
     inherits(AbstractNoSQL, AbstractObject);
@@ -71,13 +71,10 @@
       if (aValue) {
         this._opened = true;
         if (options) {
-          this._options = options;
+          return this._options = options;
         }
-        this.emit("ready");
-        return this.emit("open");
       } else {
-        this._opened = false;
-        return this.emit("closed");
+        return this._opened = false;
       }
     };
 
@@ -247,7 +244,6 @@
         }
         options.createIfMissing = options.createIfMissing !== false;
         options.errorIfExists = !!options.errorIfExists;
-        this.emit("opening", options);
         result = this._openSync(options);
         if (result) {
           this.setOpened(true, options);
@@ -263,7 +259,6 @@
     AbstractNoSQL.prototype.closeSync = function() {
       var result;
       if (this._closeSync) {
-        this.emit("closing");
         result = this._closeSync();
         if (result) {
           this.setOpened(false);
@@ -592,7 +587,6 @@
       options.createIfMissing = options.createIfMissing !== false;
       options.errorIfExists = !!options.errorIfExists;
       that = this;
-      this.emit("opening", options);
       return this._open(options, function(err, result) {
         if (err == null) {
           that.setOpened(true, options);
@@ -619,10 +613,9 @@
       if (!isFunction(callback)) {
         callback = void 0;
       }
-      this.emit("closing");
       return this._close(function(err, result) {
         if (err) {
-          return that.dispatchError(err, callback);
+          return callback(err);
         }
         that.setOpened(false);
         if (callback) {
