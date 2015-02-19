@@ -47,6 +47,9 @@ module.exports = (aOptions)->
   if not filter('batch', vIncludes, vExcludes)
     vExcludes.push 'batchAsync'
     vExcludes.push 'batchSync'
+  if not filter('del', vIncludes, vExcludes)
+    vExcludes.push 'delAsync'
+    vExcludes.push 'delSync'
 
   extend aOptions.methods,
     # override methods:

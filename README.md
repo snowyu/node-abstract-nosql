@@ -52,7 +52,7 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
   * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
   * the value will be truncated if the destBuffer.length is less than value's.
   * return the byte size of value.
-  * the will use the get/getSync to simulate if no \_getBuffer implemented.
+  * the will use the get/getSync to simulate if no `_getBuffer` implemented.
 - Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
 + Add the stream ability
   * You should install [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first to use this feature.
@@ -65,87 +65,69 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
   * support the asynchronous methods only, just do not implement these synchronous methods.
   * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
 + Add isExists/isExistsSync optional method to test key whether exists.
-  * it will use the \_get/\_getSync method if no \_isExists or \_isExistsSync implemented
+  * it will use the `_get`/`_getSync` method if no `_isExists` or `_isExistsSync` implemented
   * iExist/iExistSync is the alias of iExists/iExistsSync.
 + the AbstractNoSQL class supports events now.
   * emit `'open'` and `'ready'` event after the database is opened.
   * emit `'closed'` event after the database is closed.
 + Add isOpen()/opened to test the database whether opened.
 + Add mGetSync()/mGet() multi get keys method for the range(Array) option of the Iterator
-  * it will use the \_get/\_getSync method if no \_mGet or \_mGetSync implemented.
+  * it will use the `_get`/`_getSync` method if no `_mGet` or `_mGetSync` implemented.
   * Note: mGet/mGetSync return the array of object: [{key:key,value:value}, ...]
-    * But the \_mGet/\_mGetSync return the plain array: [key1, value1, key2, value2, ...]
+    * But the `_mGet`/`_mGetSync` return the plain array: [key1, value1, key2, value2, ...]
     + keys *(bool, default true)* option to return keys or not
       * return the values array if keys is false
     + raiseError *(bool, default true)* option to raise or ignore error
       * some elements will be undefined for the value error if keys is false
 + Add Iterator.nextSync
   * note: nextSync return the object: {key:key, value:value}, return false if ending.
-    * But the \_nextSync return the array: [key, value]
+    * But the `_nextSync` return the array: [key, value]
 
 ## AbstractError Classes
 
-see [abstract-object](https://github.com/snowyu/abstract-object)
+see [abstract-error](https://github.com/snowyu/abstract-error.js)
 
-### AbstractError
+## Event-able Ability
 
-All Errors are derived from the AbstractError.
+make it event-able so easy:
 
-* Members:
-  * message: the error message.
-  * code: the error code.
-* Methods:
-  * ok()
-  * notFound()
-  * ....
-  * invalidFormat()
-* Class Methods:
-  * AbstractError.isOk(err)
-  * AbstractError.isNotFound(err)
-  * ...
+```coffee
+eventable = require 'events-ex/eventable'
+MyDB = eventable require '...' # derived from AbstractNoSQL
+```
+Now the following events added(before and after events):
 
-the error codes:
+* open events: opening, opened/open/ready,
+* close events: closing, closed/close
+* get events: getting, get
+* mGet events: mGetting, mGet
+* put events: putting, put
+* del events: deleting, delete
+* batch events: batching, batch
 
-* AbstractError.Ok              = 0
-* AbstractError.NotFound        = 1
-* AbstractError.Corruption      = 2
-* AbstractError.NotSupported    = 3
-* AbstractError.InvalidArgument = 4
-* AbstractError.IO              = 5
-* AbstractError.NotOpened       = 6
-* AbstractError.InvalidType     = 7
-* AbstractError.InvalidFormat   = 8
+and you can choose which ones are added via this way:
 
-
-### Other Error Classes:
-
-* NotFoundError
-* CorruptionError
-* NotSupportedError/NotImplementedError
-* InvalidArgumentError
-* IOError
-* NotOpenedError
-* InvalidTypeError
-* InvalidFormatError
-* OpenError
-* CloseError
-* AlreadyEndError
-
-
-```js
-var OpenError       = createError("CanNotOpen", NotOpened)
-var CloseError      = createError("CanNotClose", 52)
-var AlreadyEndError = createError("AlreadyEnd", 53)
+```coffee
+eventable = require 'events-ex/eventable'
+MyDB = eventable MyDB,
+  include: ['open', 'close', 'get']
 ```
 
+or:
 
+```coffee
+eventable = require 'events-ex/eventable'
+MyDB = require '...'
+MyDB = eventable MyDB,
+  exclude: 'mGet'
+```
 
-## Streamable plugin
+## Streamable Ability
 
 Once implements the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator):
 
-* AbstractIterator.\_nextSync() or AbstractIterator.\_next().
-* AbstractIterator.\_endSync() or AbstractIterator.\_end().
+* `AbstractIterator._nextSync()` or `AbstractIterator._next()`.
+* `AbstractIterator._endSync()` or `AbstractIterator._end()`.
 
 the db should be the streamable.
 
@@ -153,7 +135,13 @@ But, you should install the [nosql-stream](https://github.com/snowyu/node-nosql-
 
     npm install nosql-stream
 
-see [nosql-stream](https://snowyu/github.com/node-nosql-stream) for more details
+```js
+var streamable = require('nosql-stream')
+var LevelDB = streamable(require('nosql-leveldb'))
+```
+
+see [nosql-stream](https://github.com/snowyu/node-nosql-stream) for more details
+
 
 ## Extensible API
 
@@ -163,11 +151,11 @@ Remember that each of these methods, if you implement them, will receive exactly
 
 ## Sync Methods
 
-### AbstractNoSql#_isExistsSync(key, options)
+### AbstractNoSql#`_isExistsSync`(key, options)
 
 this is an optional method for performance.
 
-### AbstractNoSql#_mGetSync(keys, options)
+### AbstractNoSql#`_mGetSync`(keys, options)
 
 this is an optional method for performance.
 
@@ -180,20 +168,20 @@ __return__
 
 * array: [key1, value1, key2, value2, ...]
 
-### AbstractNoSql#_openSync(options)
-### AbstractNoSql#_getSync(key, options)
-### AbstractNoSql#_putSync(key, value, options)
-### AbstractNoSql#_delSync(key, options)
-### AbstractNoSql#_batchSync(array, options)
+### AbstractNoSql#`_openSync`(options)
+### AbstractNoSql#`_getSync`(key, options)
+### AbstractNoSql#`_putSync`(key, value, options)
+### AbstractNoSql#`_delSync`(key, options)
+### AbstractNoSql#`_batchSync`(array, options)
 
 
 ## Async Methods
 
-### AbstractNoSql#_isExists(key, options, callback)
+### AbstractNoSql#`_isExists`(key, options, callback)
 
 this is an optional method for performance.
 
-### AbstractNoSql#_mGet(keys, options, callback)
+### AbstractNoSql#`_mGet`(keys, options, callback)
 
 this is an optional method for performance.
 
@@ -205,12 +193,12 @@ __arguments__
   * function(err, items)
     * items: [key1, value1, key2, value2, ...]
 
-### AbstractNoSql#_open(options, callback)
-### AbstractNoSql#_close(callback)
-### AbstractNoSql#_get(key, options, callback)
-### AbstractNoSql#_put(key, value, options, callback)
-### AbstractNoSql#_del(key, options, callback)
-### AbstractNoSql#_batch(array, options, callback)
+### AbstractNoSql#`_open`(options, callback)
+### AbstractNoSql#`_close`(callback)
+### AbstractNoSql#`_get`(key, options, callback)
+### AbstractNoSql#`_put`(key, value, options, callback)
+### AbstractNoSql#`_del`(key, options, callback)
+### AbstractNoSql#`_batch`(array, options, callback)
 
 If `batch()` is called without argument or with only an options object then it should return a `Batch` object with chainable methods. Otherwise it will invoke a classic batch operation.
 
@@ -233,18 +221,18 @@ db.batch(ops, function (err) {
 })
 ```
 
-### AbstractNoSql#_chainedBatch()
+### AbstractNoSql#`_chainedBatch`()
 
 By default an `batch()` operation without argument returns a blank `AbstractChainedBatch` object. The prototype is available on the main exports for you to extend. If you want to implement chainable batch operations then you should extend the `AbstractChaindBatch` and return your object in the `_chainedBatch()` method.
 
-### AbstractNoSql#_approximateSize(start, end, callback)
+### AbstractNoSql#`_approximateSize`(start, end, callback)
 
 ### AbstractNoSql#IteratorClass
 
 You can override the `IteratorClass` to your Iterator.
 After override this, it is not necessary to implement the `"_iterator()"` method.
 
-### AbstractNoSql#_iterator(options)
+### AbstractNoSql#`_iterator`(options)
 
 By default an `iterator()` operation returns a blank `AbstractIterator` object. The prototype is available on the main exports for you to extend. If you want to implement iterator operations then you should extend the `AbstractIterator` and return your object in the `_iterator(options)` method.
 
@@ -266,10 +254,10 @@ __arguments__
 
 Provided with the current instance of `AbstractNoSql` by default.
 
-### AbstractChainedBatch#_put(key, value)
-### AbstractChainedBatch#_del(key)
-### AbstractChainedBatch#_clear()
-### AbstractChainedBatch#_write(options, callback)
+### AbstractChainedBatch#`_put`(key, value)
+### AbstractChainedBatch#`_del`(key)
+### AbstractChainedBatch#`_clear`()
+### AbstractChainedBatch#`_write`(options, callback)
 
 ## Example
 
@@ -463,7 +451,7 @@ See the [CONTRIBUTING.md](https://github.com/rvagg/node-levelup/blob/master/CONT
 
 ### Contributors
 
-Abstract LevelDOWN is only possible due to the excellent work of the following contributors:
+Abstract LevelDOWN/NoSQL is only possible due to the excellent work of the following contributors:
 
 <table><tbody>
 <tr><th align="left">Riceball LEE</th><td><a href="https://github.com/snowyu">GitHub/snowyu</a></td><td>&nbsp;</td></tr>
@@ -487,6 +475,6 @@ Abstract LevelDOWN is only possible due to the excellent work of the following c
 License &amp; copyright
 -------------------
 
-Copyright (c) 2012-2014 Abstract LevelDOWN contributors (listed above).
+Copyright (c) 2012-2015 Abstract LevelDown/NoSQL contributors (listed above).
 
-Abstract LevelDOWN is licensed under the MIT license. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE.md file for more details.
+Abstract NoSQL is licensed under the MIT license. All rights not explicitly granted in the MIT license are reserved. See the included LICENSE.md file for more details.
