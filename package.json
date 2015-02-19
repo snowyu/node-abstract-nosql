@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "abstract-iterator": ">=0.10.0",
+    "pre-commit": "^1.0.4",
     "rimraf": "*",
     "sinon": "^1.12.2",
     "tap": "*"
@@ -56,6 +57,12 @@
   "scripts": {
     "test": "node_modules/.bin/tap ./test.js",
     "prepublish": "coffee -o . -c src/*.coffee"
+  },
+  "pre-commit": {
+    "run": [
+      "prepublish",
+      "test"
+    ]
   },
   "license": "MIT",
   "optionalDependencies": {}
