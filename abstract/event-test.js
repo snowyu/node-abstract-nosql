@@ -3,7 +3,7 @@ var consts            = require('events-ex/consts')
 var EVENT_DONE        = consts.DONE
 var EVENT_STOPPED     = consts.STOPPED
 var Errors            = require("../abstract-error")
-var ReadError         = Errors.ReadError
+var HookedEventError  = Errors.HookedEventError
 
 
 module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
@@ -194,8 +194,8 @@ module.exports.getSync = function (test) {
       }
     })
     t.throws(db.get.bind(db, 'foo'), {
-      name:'ReadError',
-      message : 'Get is halted by listener'
+      name:'HookedEventError',
+      message : 'event stopped by listener'
       }
     )
     t.equal(getting, 1)
@@ -265,7 +265,7 @@ module.exports.get = function (test) {
     })
     db.get('foo', function (err, result) {
       t.ok(err, 'should err')
-      t.type(err, ReadError)
+      t.type(err, HookedEventError)
       t.equal(getting, 1)
       t.end()
     })

@@ -2,6 +2,7 @@ Errors            = require("./abstract-error")
 extend            = require 'util-ex/lib/_extend'
 isArray           = require 'util-ex/lib/is/type/array'
 isFunction        = require 'util-ex/lib/is/type/function'
+isUndefined       = require 'util-ex/lib/is/type/undefined'
 eventable         = require 'events-ex/eventable'
 consts            = require 'events-ex/consts'
 EVENT_DONE        = consts.DONE
@@ -15,6 +16,7 @@ OpenError             = Errors.OpenError
 CloseError            = Errors.CloseError
 ReadError             = Errors.ReadError
 WriteError            = Errors.WriteError
+HookedEventError      = Errors.HookedEventError
 
 module.exports = (aOptions)->
   aOptions = {} unless aOptions
@@ -52,6 +54,16 @@ module.exports = (aOptions)->
     vExcludes.push 'delSync'
 
   extend aOptions.methods,
+    _processHookedResult: (result)->
+      if result and (vState = result.state)
+        if vState is EVENT_DONE
+          return result.result
+        else if vState is EVENT_STOPPED
+          errMsg = result.result
+          errMsg = 'event stopped by listener' unless errMsg
+          err = new HookedEventError(errMsg)
+          return err
+      return
     # override methods:
     openSync: (options) ->
       inherited = @super
@@ -97,12 +109,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options, callback)->
         result = @emit 'getting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return callback null, result.result
-          else if vState is EVENT_STOPPED
-            err = new ReadError('Get is halted by listener')
-            return @dispatchError err, callback
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
         inherited.call @, key, options, (err, result)=>
           return @dispatchError err, callback if err
           @emit 'get', key, result, options
@@ -112,11 +124,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options)->
         result = @emit 'getting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return result.result
-          else if vState is EVENT_STOPPED
-            throw new ReadError('Get is halted by listener')
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
         result = inherited.apply @, arguments
         @emit 'get', key, result, options
         return result
@@ -125,12 +138,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options, callback)->
         result = @emit 'mGetting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return callback null, result.result
-          else if vState is EVENT_STOPPED
-            err = new ReadError('mGet is halted by listener')
-            return @dispatchError err, callback
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
         inherited.call @, key, options, (err, result)=>
           return @dispatchError err, callback if err
           @emit 'mGet', key, result, options
@@ -140,11 +153,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options)->
         result = @emit 'mGetting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return result.result
-          else if vState is EVENT_STOPPED
-            throw new ReadError('mGet is halted by listener')
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
         result = inherited.apply @, arguments
         @emit 'mGet', key, result, options
         return result
@@ -153,12 +167,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, value, options, callback)->
         result = @emit 'putting', key, value, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return callback null, result.result
-          else if vState is EVENT_STOPPED
-            err = new ReadError('put is halted by listener')
-            return @dispatchError err, callback
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
         inherited.call @, key, value, options, (err, result)=>
           return @dispatchError err, callback if err
           @emit 'put', key, value, result, options
@@ -168,11 +182,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, value, options)->
         result = @emit 'putting', key, value, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return result.result
-          else if vState is EVENT_STOPPED
-            throw new ReadError('put is halted by listener')
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
         result = inherited.apply @, arguments
         @emit 'put', key, value, result, options
         return result
@@ -181,12 +196,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options, callback)->
         result = @emit 'deleting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return callback null, result.result
-          else if vState is EVENT_STOPPED
-            err = new ReadError('Get is halted by listener')
-            return @dispatchError err, callback
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
         inherited.call @, key, options, (err, result)=>
           return @dispatchError err, callback if err
           @emit 'delete', key, result, options
@@ -196,11 +211,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((key, options)->
         result = @emit 'deleting', key, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return result.result
-          else if vState is EVENT_STOPPED
-            throw new ReadError('Get is halted by listener')
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
         result = inherited.apply @, arguments
         @emit 'delete', key, result, options
         return result
@@ -209,12 +225,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((operations, options, callback)->
         result = @emit 'batching', operations, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return callback null, result.result
-          else if vState is EVENT_STOPPED
-            err = new ReadError('Get is halted by listener')
-            return @dispatchError err, callback
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
         inherited.call @, operations, options, (err, result)=>
           return @dispatchError err, callback if err
           @emit 'batch', operations, result, options
@@ -224,11 +240,12 @@ module.exports = (aOptions)->
       inherited = @super
       ((operations, options)->
         result = @emit 'batching', operations, options
-        if result and (vState = result.state)
-          if vState is EVENT_DONE
-            return result.result
-          else if vState is EVENT_STOPPED
-            throw new ReadError('Get is halted by listener')
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
         result = inherited.apply @, arguments
         @emit 'batch', operations, result, options
         return result
