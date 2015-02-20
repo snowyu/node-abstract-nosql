@@ -10,7 +10,9 @@ NotFoundError   = errors.NotFoundError
 
 module.exports = class FakeDB
   inherits FakeDB, AbstractNoSql
-  constructor: ->super
+  constructor: ->
+    return new FakeDB if not (this instanceof FakeDB)
+    super
   IteratorClass: FakeIterator
   _openSync: sinon.spy ->
     @data = {}

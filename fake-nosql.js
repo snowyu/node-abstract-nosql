@@ -20,6 +20,9 @@
     inherits(FakeDB, AbstractNoSql);
 
     function FakeDB() {
+      if (!(this instanceof FakeDB)) {
+        return new FakeDB;
+      }
       FakeDB.__super__.constructor.apply(this, arguments);
     }
 
