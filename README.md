@@ -89,7 +89,11 @@ see [abstract-error](https://github.com/snowyu/abstract-error.js)
 
 ## Eventable Ability
 
-make it event-able so easy:
+make it event-able so easy, install it first:
+
+    npm install events-ex
+
+add the eventable ability to a database:
 
 ```coffee
 eventable = require 'events-ex/eventable'
@@ -146,12 +150,28 @@ var MyDB              = eventable(require('...'))
 
 mydb = new MyDB(location)
 
+mydb.cache = {
+  'cached_foo': 'bar'
+}
 mydb.on 'getting', (key, options)->
-  if key is 'stoppedKey'
-    return
-      state: EVENT_STOPPED
-```
+  if (key === 'stoppedKey') {
+    return {
+      state: EVENT_STOPPED,
+      result: 'halted via stoppedKey found.'
+    }
+  } else if (this.cache.hasOwnProperty(key))
+    return {
+      state: EVENT_DONE,
+      // this is as get result.
+      result: this.cache[key]
+    }
 
+console.log(mydb.get('cached_foo');
+//print 'bar'
+
+mydb.get('stoppedKey');
+//throw HookedEventError: 'halted via stoppedKey found.'
+```
 
 ## Streamable Ability
 
@@ -173,6 +193,29 @@ var LevelDB = streamable(require('nosql-leveldb'))
 
 see [nosql-stream](https://github.com/snowyu/node-nosql-stream) for more details
 
+## Encoding-able Ability
+
+[nosql-encoding](https://github.com/snowyu/node-nosql-encoding) add the encoding
+ability to the abstract-nosql database.
+
+    npm install nosql-encoding
+
+
+add the encoding ability to a database:
+
+```js
+var encodingable = require 'nosql-encoding'
+var MyDB = encodingable(require('...')) # derived from AbstractNoSQL
+```
+you can use the encoding ability now:
+
+```js
+var db = MyDB('location')
+// that's all.
+db.open({keyEncoding: 'text', valueEncoding: 'json'})
+```
+
+see [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) for more details
 
 ## Extensible API
 
