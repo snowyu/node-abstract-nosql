@@ -87,7 +87,7 @@ So the simulated asynchronous uses this way, if you do not implement the asynchr
 
 see [abstract-error](https://github.com/snowyu/abstract-error.js)
 
-## Event-able Ability
+## Eventable Ability
 
 make it event-able so easy:
 
@@ -97,7 +97,7 @@ MyDB = eventable require '...' # derived from AbstractNoSQL
 ```
 Now the following events added(before and after events):
 
-* open events: opening, opened/open/ready,
+* open events: opening, opened/open/ready
 * close events: closing, closed/close
 * get events: getting, get
 * mGet events: mGetting, mGet
@@ -110,7 +110,7 @@ and you can choose which ones are added via this way:
 ```coffee
 eventable = require 'events-ex/eventable'
 MyDB = eventable MyDB,
-  include: ['open', 'close', 'get']
+  include: ['open', 'close'] # only include 'open' and 'close' events
 ```
 
 or:
@@ -119,8 +119,39 @@ or:
 eventable = require 'events-ex/eventable'
 MyDB = require '...'
 MyDB = eventable MyDB,
-  exclude: 'mGet'
+  # only include 'open' and 'close' events
+  exclude: ['mGet', 'put', 'get', 'del', 'batch']
 ```
+
+usage:
+
+```coffee
+MyDB = eventable MyDB
+mydb = new MyDB(location)
+mydb.once 'opening', ->
+  console.log 'db is opening.'
+mydb.on 'ready', ->
+  console.log 'db is opened.'
+mydb.open()
+
+```
+hooked events usage:
+
+```js
+var eventable         = require 'events-ex/eventable'
+var consts            = require('events-ex/consts')
+var EVENT_DONE        = consts.DONE
+var EVENT_STOPPED     = consts.STOPPED
+var MyDB              = eventable(require('...'))
+
+mydb = new MyDB(location)
+
+mydb.on 'getting', (key, options)->
+  if key is 'stoppedKey'
+    return
+      state: EVENT_STOPPED
+```
+
 
 ## Streamable Ability
 
