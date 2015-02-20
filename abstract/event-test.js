@@ -1,4 +1,10 @@
 var db
+var consts            = require('events-ex/consts')
+var EVENT_DONE        = consts.DONE
+var EVENT_STOPPED     = consts.STOPPED
+var Errors            = require("../abstract-error")
+var ReadError         = Errors.ReadError
+
 
 module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
   test('setUp common', testCommon.setUp)
@@ -163,6 +169,38 @@ module.exports.getSync = function (test) {
     t.equal(getting, 1)
     t.end()
   })
+  test('test sync hooked getting event(EVENT_DONE)', function (t) {
+    var getting = 0
+    db.once('getting', function(key, options){
+      t.equal(key, 'foo')
+      ++getting
+      this.result = {
+        state: EVENT_DONE,
+        result: 'hookedbar'
+      }
+    })
+    t.equal(db.get('foo'), 'hookedbar')
+    t.equal(getting, 1)
+    t.end()
+  })
+  test('test sync hooked getting event(EVENT_STOPPED)', function (t) {
+    var getting = 0
+    db.once('getting', function(key, options){
+      t.equal(key, 'foo')
+      ++getting
+      this.stopped = true
+      this.result = {
+        state: EVENT_STOPPED,
+      }
+    })
+    t.throws(db.get.bind(db, 'foo'), {
+      name:'ReadError',
+      message : 'Get is halted by listener'
+      }
+    )
+    t.equal(getting, 1)
+    t.end()
+  })
   test('test sync get event', function (t) {
     var get = 0
     db.once('get', function(key, value, options){
@@ -196,6 +234,42 @@ module.exports.get = function (test) {
       t.equal(result, 'bar')
     })
   })
+  test('test hooked getting event(EVENT_DONE)', function (t) {
+    var getting = 0
+    db.once('getting', function(key, options){
+      t.equal(key, 'foo')
+      ++getting
+      this.result = {
+        state: EVENT_DONE,
+        result: 'hookedbar'
+      }
+    })
+    db.get('foo', function (err, result) {
+      t.error(err)
+      t.ok(typeof result === 'string', 'should be string by default')
+      t.equal(getting, 1)
+
+      t.equal(result, 'hookedbar')
+      t.end()
+    })
+  })
+  test('test hooked getting event(EVENT_STOPPED)', function (t) {
+    var getting = 0
+    db.once('getting', function(key, options){
+      t.equal(key, 'foo')
+      ++getting
+      this.stopped = true
+      this.result = {
+        state: EVENT_STOPPED,
+      }
+    })
+    db.get('foo', function (err, result) {
+      t.ok(err, 'should err')
+      t.type(err, ReadError)
+      t.equal(getting, 1)
+      t.end()
+    })
+  })
   test('test get event', function (t) {
     db.once('get', function(key, value, options){
       t.equal(key, 'foo')
@@ -203,6 +277,7 @@ module.exports.get = function (test) {
       t.end()
     })
     db.get('foo', function (err, result) {
+      console.log(err)
       t.error(err)
       t.ok(typeof result === 'string', 'should be string by default')
 
