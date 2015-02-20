@@ -23,66 +23,6 @@ The setImmediate package could be extended to use different implementation(setIm
 So the simulated asynchronous uses this way, if you do not implement the asynchronous methods.
 
 
-## Changes(diference from abstract-leveldown)
-
-### v2.1.x
-
-* **<broken change>**: separate event-able ability from AbstractNoSql
-+ add the eventable to open, close, put, get, mGet, del, batch methods
-  * can hook the 'putting', 'getting, 'mGetting', 'deleting' events.
-
-### v2.x.x
-
-* the modularization(feature plugin) with abstract-nosql
-  * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding)
-  * [nosql-stream](https://github.com/snowyu/node-nosql-stream)
-* Let the user decide whether to use these features.
-* (`broken changes`) remove the streamable feature from buildin. this is a plugin now.
-* (`broken changes`) defaults to disable asBuffer option.
-  * pls use the `getBuffer` method to get as buffer.
-
-
-### V1.x.x
-
-+ Can add the encoding key/value ability via two ways:
-  * see the [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) package.
-  * see the [encoding-iterator](https://github.com/snowyu/node-encoding-iterator) package.
-+ getBuffer/getBufferSync(key, destBuffer, options) optional method.
-  * the key's value will be put into the destBuffer if destBuffer is not null.
-  * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
-  * the value will be truncated if the destBuffer.length is less than value's.
-  * return the byte size of value.
-  * the will use the get/getSync to simulate if no `_getBuffer` implemented.
-- Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
-+ Add the stream ability
-  * You should install [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first to use this feature.
-+ Add the AbstractError and error code supports.
-* DB constructor allows no location.
-* Add IteratorClass supports.
-+ Add synchronous methods supports.
-  * Add the synchronous methods support now. You can implement the synchronous methods only.
-  * The asynchronous methods will be simulated via these synchronous methods. If you wanna
-  * support the asynchronous methods only, just do not implement these synchronous methods.
-  * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
-+ Add isExists/isExistsSync optional method to test key whether exists.
-  * it will use the `_get`/`_getSync` method if no `_isExists` or `_isExistsSync` implemented
-  * iExist/iExistSync is the alias of iExists/iExistsSync.
-+ the AbstractNoSQL class supports events now.
-  * emit `'open'` and `'ready'` event after the database is opened.
-  * emit `'closed'` event after the database is closed.
-+ Add isOpen()/opened to test the database whether opened.
-+ Add mGetSync()/mGet() multi get keys method for the range(Array) option of the Iterator
-  * it will use the `_get`/`_getSync` method if no `_mGet` or `_mGetSync` implemented.
-  * Note: mGet/mGetSync return the array of object: [{key:key,value:value}, ...]
-    * But the `_mGet`/`_mGetSync` return the plain array: [key1, value1, key2, value2, ...]
-    + keys *(bool, default true)* option to return keys or not
-      * return the values array if keys is false
-    + raiseError *(bool, default true)* option to raise or ignore error
-      * some elements will be undefined for the value error if keys is false
-+ Add Iterator.nextSync
-  * note: nextSync return the object: {key:key, value:value}, return false if ending.
-    * But the `_nextSync` return the array: [key, value]
-
 ## AbstractError Classes
 
 see [abstract-error](https://github.com/snowyu/abstract-error.js)
@@ -337,12 +277,34 @@ Provided with the current instance of `AbstractNoSql` by default.
 
 A simplistic in-memory LevelDOWN replacement
 
-use sync methods:
+use sync methods will be very simple:
 
+the coffee-script implementation is more natural:
+
+```coffee
+inherits = require('inherits-ex')
+AbstractNoSql = require('abstract-nosql')
+
+class FakeNoSqlDatabase
+  inherits FakeNoSqlDatabase, AbstractNoSql
+  _openSync: (options)-> @_store = {}
+  _putSync: (key, value, options)->
+    key = '%' + key # safety, to avoid key='__proto__'-type skullduggery
+    @_store[key] = value
+    true
+  _getSync: (key, options)->
+    result = @_store['%' + key]
+    throw new Error('NotFound') if result is undefined
+    result
+  _delSync: (key, options)->delete @_store['%' + key]
+  #the _isExistsSync is optional:
+  _isExistsSync: (key, options)->@_store.hasOwnProperty('%' + key)
+```
+the js implementation:
 
 ```js
-var util = require('util')
-  , AbstractNoSql = require('./').AbstractNoSql
+var inherits = require('inherits-ex')
+  , AbstractNoSql = require('abstract-nosql')
 
 // constructor, passes through the 'location' argument to the AbstractNoSql constructor
 function FakeNoSqlDatabase (location) {
@@ -350,7 +312,7 @@ function FakeNoSqlDatabase (location) {
 }
 
 // our new prototype inherits from AbstractNoSql
-util.inherits(FakeNoSqlDatabase, AbstractNoSql)
+inherits(FakeNoSqlDatabase, AbstractNoSql)
 
 // implement some methods
 
@@ -360,18 +322,18 @@ FakeNoSqlDatabase.prototype._openSync = function (options) {
 }
 
 FakeNoSqlDatabase.prototype._putSync = function (key, value, options) {
-  key = '_' + key // safety, to avoid key='__proto__'-type skullduggery
+  key = '%' + key // safety, to avoid key='__proto__'-type skullduggery
   this._store[key] = value
   return true
 }
 
 //the isExists is an optional method:
 FakeNoSqlDatabase.prototype._isExistsSync = function (key, options) {
-  return this._store.hasOwnProperty('_' + key)
+  return this._store.hasOwnProperty('%' + key)
 }
 
 FakeNoSqlDatabase.prototype._getSync = function (key, options) {
-  var value = this._store['_' + key]
+  var value = this._store['%' + key]
   if (value === undefined) {
     // 'NotFound' error, consistent with LevelDOWN API
     throw new Error('NotFound')
@@ -380,7 +342,7 @@ FakeNoSqlDatabase.prototype._getSync = function (key, options) {
 }
 
 FakeNoSqlDatabase.prototype._delSync = function (key, options) {
-  delete this._store['_' + key]
+  delete this._store['%' + key]
   return true
 }
 
@@ -511,6 +473,66 @@ db.put('foo', 'bar', function (err) {
 ```
 
 See [nosql-memdb](https://github.com/snowyu/node-nosql-memdb/) if you are looking for a complete in-memory replacement for AbstractNoSql database.
+
+## Changes(diference from abstract-leveldown)
+
+### v2.1.x
+
+* **<broken change>**: separate event-able ability from AbstractNoSql
++ add the eventable to open, close, put, get, mGet, del, batch methods
+  * can hook the 'putting', 'getting, 'mGetting', 'deleting' events.
+
+### v2.x.x
+
+* the modularization(feature plugin) with abstract-nosql
+  * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding)
+  * [nosql-stream](https://github.com/snowyu/node-nosql-stream)
+* Let the user decide whether to use these features.
+* (`broken changes`) remove the streamable feature from buildin. this is a plugin now.
+* (`broken changes`) defaults to disable asBuffer option.
+  * pls use the `getBuffer` method to get as buffer.
+
+
+### V1.x.x
+
++ Can add the encoding key/value ability via two ways:
+  * see the [nosql-encoding](https://github.com/snowyu/node-nosql-encoding) package.
+  * see the [encoding-iterator](https://github.com/snowyu/node-encoding-iterator) package.
++ getBuffer/getBufferSync(key, destBuffer, options) optional method.
+  * the key's value will be put into the destBuffer if destBuffer is not null.
+  * the options.offset added, write to the destBuffer at offset position. offset defaults to 0.
+  * the value will be truncated if the destBuffer.length is less than value's.
+  * return the byte size of value.
+  * the will use the get/getSync to simulate if no `_getBuffer` implemented.
+- Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
++ Add the stream ability
+  * You should install [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first to use this feature.
++ Add the AbstractError and error code supports.
+* DB constructor allows no location.
+* Add IteratorClass supports.
++ Add synchronous methods supports.
+  * Add the synchronous methods support now. You can implement the synchronous methods only.
+  * The asynchronous methods will be simulated via these synchronous methods. If you wanna
+  * support the asynchronous methods only, just do not implement these synchronous methods.
+  * But if you wanna support the synchronous only, you should override the asynchronous methods to disable it.
++ Add isExists/isExistsSync optional method to test key whether exists.
+  * it will use the `_get`/`_getSync` method if no `_isExists` or `_isExistsSync` implemented
+  * iExist/iExistSync is the alias of iExists/iExistsSync.
++ the AbstractNoSQL class supports events now.
+  * emit `'open'` and `'ready'` event after the database is opened.
+  * emit `'closed'` event after the database is closed.
++ Add isOpen()/opened to test the database whether opened.
++ Add mGetSync()/mGet() multi get keys method for the range(Array) option of the Iterator
+  * it will use the `_get`/`_getSync` method if no `_mGet` or `_mGetSync` implemented.
+  * Note: mGet/mGetSync return the array of object: [{key:key,value:value}, ...]
+    * But the `_mGet`/`_mGetSync` return the plain array: [key1, value1, key2, value2, ...]
+    + keys *(bool, default true)* option to return keys or not
+      * return the values array if keys is false
+    + raiseError *(bool, default true)* option to raise or ignore error
+      * some elements will be undefined for the value error if keys is false
++ Add Iterator.nextSync
+  * note: nextSync return the object: {key:key, value:value}, return false if ending.
+    * But the `_nextSync` return the array: [key, value]
 
 
 <a name="contributing"></a>
