@@ -579,17 +579,6 @@ module.exports.batch = function (test) {
     , { type: 'put', key: 'd3', value: 'bar3' }
     , { type: 'put', key: 'd4', value: 'bar4' }
   ]
-  test('prepare for batch event test', function (t) {
-    db.batch([
-        { type: 'put', key: 'd1', value: 'bar1' }
-      , { type: 'put', key: 'd2', value: 'bar2' }
-      , { type: 'put', key: 'd3', value: 'bar3' }
-      , { type: 'put', key: 'd4', value: 'bar4' }
-    ], function (err) {
-      t.error(err)
-      t.end()
-    })
-  })
 
   test('test batching event', function (t) {
     var done = 0
@@ -599,7 +588,6 @@ module.exports.batch = function (test) {
     })
     db.batch(ops, function (err, result) {
       t.error(err)
-      t.ok(result, 'batch')
       t.equal(done,1)
       t.end()
     })
@@ -649,9 +637,70 @@ module.exports.batch = function (test) {
     db.batch(ops, function (err, result) {
       t.error(err)
       t.equal(done,1)
-      t.ok(result, 'batch')
       t.end()
     })
+  })
+}
+
+module.exports.batchSync = function (test) {
+  var ops = [
+      { type: 'put', key: 'd1', value: 'bar1' }
+    , { type: 'put', key: 'd2', value: 'bar2' }
+    , { type: 'put', key: 'd3', value: 'bar3' }
+    , { type: 'put', key: 'd4', value: 'bar4' }
+  ]
+
+  test('test sync batching event', function (t) {
+    var done = 0
+    db.once('batching', function(key, options){
+      ++done
+      t.deepEqual(key, ops)
+    })
+    t.ok(db.batch(ops), 'batch')
+    t.equal(done,1)
+    t.end()
+  })
+  test('test sync hooked batching event(EVENT_DONE)', function (t) {
+    var done = 0
+    db.once('batching', function(key, options){
+      t.deepEqual(key, ops)
+      ++done
+      this.result = {
+        state: EVENT_DONE,
+        result: 123
+      }
+    })
+    t.equal(db.batch(ops), 123)
+    t.equal(done, 1)
+    t.end()
+  })
+  test('test sync hooked batching event(EVENT_STOPPED)', function (t) {
+    var done = 0
+    db.once('batching', function(key, options){
+      t.equal(key, ops)
+      ++done
+      this.stopped = true
+      this.result = {
+        state: EVENT_STOPPED,
+      }
+    })
+    t.throws(db.batch.bind(db, ops), {
+      name:'HookedEventError'
+    , message : 'event stopped by listener'
+    })
+    t.equal(done, 1)
+    t.end()
+  })
+  test('test sync batch event', function (t) {
+    var done = 0
+    db.once('batch', function(key, result, options){
+      ++done
+      t.equal(key, ops)
+      t.ok(result, 'batch')
+    })
+    t.ok(db.batch(ops), 'batch')
+    t.equal(done,1)
+    t.end()
   })
 }
 
@@ -701,6 +750,8 @@ module.exports.all = function (NoSqlDatabase, test, testCommon) {
     module.exports.putSync(test)
   if (NoSqlDatabase.prototype._delSync)
     module.exports.delSync(test)
+  if (NoSqlDatabase.prototype._batchSync)
+    module.exports.batchSync(test)
   if (NoSqlDatabase.prototype._closeSync) {
     delete NoSqlDatabase.prototype._close
     module.exports.close(NoSqlDatabase, test, testCommon)
