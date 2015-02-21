@@ -27,8 +27,6 @@ module.exports = class FakeDB
   _getBufferSync: sinon.spy ->
     AbstractNoSql::_getBufferSync.apply this, arguments
   _getSync: sinon.spy (key, opts)->
-    #encoding = @valueEncoding opts
-    #if encoding then encoding.encode(key) else '"'+key+'"'
     if @data.hasOwnProperty key
       @data[key]
     else
