@@ -151,6 +151,69 @@ module.exports.put = function (test) {
   })
 }
 
+module.exports.getBufferSync = function (test) {
+  test('prepare for sync getBuffer test', function (t) {
+    db.put('foos', 'bar', function (err) {
+      t.error(err)
+      t.end()
+    })
+  })
+
+  test('test sync gettingBuffer event', function (t) {
+    var getting = 0
+    db.once('gettingBuffer', function(key, options){
+      t.equal(key, 'foos')
+      ++getting
+    })
+    t.equal(db.getBuffer('foos'), 3)
+    t.equal(getting, 1)
+    t.end()
+  })
+  test('test sync hooked gettingBuffer event(EVENT_DONE)', function (t) {
+    var getting = 0
+    db.once('gettingBuffer', function(key, options){
+      t.equal(key, 'foos')
+      ++getting
+      this.result = {
+        state: EVENT_DONE,
+        result: 'hookedbar'
+      }
+    })
+    t.equal(db.get('foo'), 'hookedbar')
+    t.equal(getting, 1)
+    t.end()
+  })
+  test('test sync hooked getting event(EVENT_STOPPED)', function (t) {
+    var getting = 0
+    db.once('getting', function(key, options){
+      t.equal(key, 'foo')
+      ++getting
+      this.stopped = true
+      this.result = {
+        state: EVENT_STOPPED,
+      }
+    })
+    t.throws(db.get.bind(db, 'foo'), {
+      name:'HookedEventError',
+      message : 'event stopped by listener'
+      }
+    )
+    t.equal(getting, 1)
+    t.end()
+  })
+  test('test sync get event', function (t) {
+    var get = 0
+    db.once('get', function(key, value, options){
+      t.equal(key, 'foos')
+      t.equal(value, 'bar')
+      ++get
+    })
+    t.equal(db.get('foos'), 'bar')
+    t.equal(get, 1)
+    t.end()
+  })
+}
+
 module.exports.getSync = function (test) {
   test('prepare put foos bar for sync get test', function (t) {
     db.put('foos', 'bar', function (err) {
@@ -589,6 +652,7 @@ module.exports.batch = function (test) {
     db.batch(ops, function (err, result) {
       t.error(err)
       t.equal(done,1)
+      t.ok(result, 'batch')
       t.end()
     })
   })

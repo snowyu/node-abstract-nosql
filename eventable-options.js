@@ -74,6 +74,10 @@
       vExcludes.push('getAsync');
       vExcludes.push('getSync');
     }
+    if (!filter('getBuffer', vIncludes, vExcludes)) {
+      vExcludes.push('getBufferAsync');
+      vExcludes.push('getBufferSync');
+    }
     if (!filter('mGet', vIncludes, vExcludes)) {
       vExcludes.push('mGetAsync');
       vExcludes.push('mGetSync');
@@ -171,6 +175,50 @@
             };
           })(this));
         }).apply(this.self);
+      },
+      getBufferAsync: function(key, destBuffer, options, callback) {
+        var inherited;
+        inherited = this["super"];
+        return (function(key, destBuffer, options, callback) {
+          var result;
+          result = this.emit('gettingBuffer', key, destBuffer, options);
+          result = this._processHookedResult(result);
+          if (!isUndefined(result)) {
+            if (result instanceof Error) {
+              return this.dispatchError(result, callback);
+            } else {
+              return callback(null, result);
+            }
+          }
+          return inherited.call(this, key, destBuffer, options, (function(_this) {
+            return function(err, result) {
+              if (err) {
+                return _this.dispatchError(err, callback);
+              }
+              _this.emit('getBuffer', key, destBuffer, result, options);
+              return callback(null, result);
+            };
+          })(this));
+        }).apply(this.self, arguments);
+      },
+      getBufferSync: function(key, destBuffer, options) {
+        var inherited;
+        inherited = this["super"];
+        return (function(key, destBuffer, options) {
+          var result;
+          result = this.emit('gettingBuffer', key, destBuffer, options);
+          result = this._processHookedResult(result);
+          if (!isUndefined(result)) {
+            if (result instanceof Error) {
+              throw result;
+            } else {
+              return result;
+            }
+          }
+          result = inherited.apply(this, arguments);
+          this.emit('getBuffer', key, destBuffer, result, options);
+          return result;
+        }).apply(this.self, arguments);
       },
       getAsync: function(key, options, callback) {
         var inherited;

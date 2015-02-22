@@ -44,6 +44,7 @@ Now the following events added(before and after events):
 * open events: opening, opened/open/ready
 * close events: closing, closed/close
 * get events: getting, get
+* getBuffer events: gettingBuffer, getBuffer
 * mGet events: mGetting, mGet
 * put events: putting, put
 * del events: deleting, delete
@@ -64,7 +65,7 @@ eventable = require 'events-ex/eventable'
 MyDB = require '...'
 MyDB = eventable MyDB,
   # only include 'open' and 'close' events
-  exclude: ['mGet', 'put', 'get', 'del', 'batch']
+  exclude: ['mGet', 'getBuffer', 'put', 'get', 'del', 'batch']
 ```
 
 usage:

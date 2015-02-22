@@ -40,6 +40,9 @@ module.exports = (aOptions)->
   if not filter('get', vIncludes, vExcludes)
     vExcludes.push 'getAsync'
     vExcludes.push 'getSync'
+  if not filter('getBuffer', vIncludes, vExcludes)
+    vExcludes.push 'getBufferAsync'
+    vExcludes.push 'getBufferSync'
   if not filter('mGet', vIncludes, vExcludes)
     vExcludes.push 'mGetAsync'
     vExcludes.push 'mGetSync'
@@ -105,6 +108,35 @@ module.exports = (aOptions)->
           @emit 'close', result
           callback null, result if callback
       ).apply(@self)
+    getBufferAsync: (key, destBuffer, options, callback) ->
+      inherited = @super
+      ((key, destBuffer, options, callback)->
+        result = @emit 'gettingBuffer', key, destBuffer, options
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            return @dispatchError result, callback
+          else
+            return callback null, result
+        inherited.call @, key, destBuffer, options, (err, result)=>
+          return @dispatchError err, callback if err
+          @emit 'getBuffer', key, destBuffer, result, options
+          callback null, result
+      ).apply(@self, arguments)
+    getBufferSync: (key, destBuffer, options) ->
+      inherited = @super
+      ((key, destBuffer, options)->
+        result = @emit 'gettingBuffer', key, destBuffer, options
+        result = @_processHookedResult result
+        if not isUndefined result
+          if result instanceof Error
+            throw result
+          else
+            return result
+        result = inherited.apply @, arguments
+        @emit 'getBuffer', key, destBuffer, result, options
+        return result
+      ).apply(@self, arguments)
     getAsync: (key, options, callback) ->
       inherited = @super
       ((key, options, callback)->
