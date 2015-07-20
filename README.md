@@ -11,6 +11,7 @@ addin. and you(database developer) almost have nothing to do, can have these fea
 
 * [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
 * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding): key/value encoding ability.
+* [events-ex](https://github.com/snowyu/events-ex.js): hooked eventable ability.
 
 abstract-nosql Interface is neutral. There is no bias neither synchronous bias nor asynchronous bias. So that more people choose according to their own manner. For myself, I am not very concerned about the performance of javascript, I am more concerned about the efficiency of its development, as well as through functional programming (functions, closures such a simple concept) extend out of the rich and wonderful world. I still can not help but to think about performance issues. Asynchronous itself produces a small gap, because javascript reason this gap is magnified.
 
