@@ -49,7 +49,7 @@
     "pre-commit": "^1.0.4",
     "rimraf": "*",
     "sinon": "^1.12.2",
-    "tap": "*"
+    "tap": "~0.4.13"
   },
   "browser": {
     "rimraf": false
