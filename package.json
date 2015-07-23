@@ -40,7 +40,7 @@
     "abstract-object": "~2.1.5",
     "buffer-codec": "~1.6.2",
     "events-ex": "^1.1.2",
-    "inherits-ex": "^1.1.0",
+    "inherits-ex": "^1.1.1",
     "util-ex": "^0.2.8",
     "xtend": "~4.0.0"
   },
