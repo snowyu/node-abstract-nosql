@@ -1,4 +1,4 @@
-# Copyright (c) 2013 Rod Vagg, MIT License 
+# Copyright (c) 2013 Rod Vagg, MIT License
 setImmediate          = global.setImmediate or process.nextTick
 Errors                = require("./abstract-error")
 InvalidArgumentError  = Errors.InvalidArgumentError
@@ -51,10 +51,11 @@ module.exports = class AbstractChainedBatch
   write: (options, callback) ->
     @_checkWritten()
     callback = options if typeof options is "function"
-    throw new InvalidArgumentError("write() requires a callback argument")  unless typeof callback is "function"
+    unless typeof callback is "function"
+      throw new InvalidArgumentError("write() requires a callback argument")
     options = {} unless typeof options is "object"
     @_written = true
     return @_write(callback) if typeof @_write is "function"
-    return @_db._batch(@_operations, options, callback) if typeof @_db._batch is "function"
+    if typeof @_db._batch is "function"
+      return @_db._batch(@_operations, options, callback)
     setImmediate callback
-

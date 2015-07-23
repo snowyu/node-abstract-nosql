@@ -26,7 +26,8 @@ module.exports = class AbstractNoSQL
     super
   initialize:(location) ->
     #not all database have the location argument.
-    throw new InvalidArgumentError("constructor requires a location string argument")  if location and typeof location isnt "string"
+    if location and typeof location isnt "string"
+      throw new InvalidArgumentError("constructor requires a location string argument")
     @location = location
   finalize: ->
     if @_opened
@@ -129,7 +130,8 @@ module.exports = class AbstractNoSQL
   approximateSizeSync: (start, end) ->
     if @_approximateSizeSync
       if not start? or not end?
-        throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` arguments")
+        throw new InvalidArgumentError "
+        approximateSize() requires valid `start`, `end` arguments"
       start = String(start)  unless @_isBuffer(start)
       end = String(end)  unless @_isBuffer(end)
       result = @_approximateSizeSync(start, end)
@@ -158,7 +160,8 @@ module.exports = class AbstractNoSQL
 
 
   #the async methods simulated by sync methods:
-  #the derived class can override these methods to implement the real async methods for better performance.
+  #the derived class can override these methods to implement
+  #the real async methods for better performance.
   _open: (options, callback) ->
     that = this
     if @_openSync
@@ -565,13 +568,15 @@ module.exports = class AbstractNoSQL
     @_approximateSize start, end, callback
   approximateSize: (start, end, callback) ->
     if not start? or not end? or isFunction(start) or isFunction(end)
-      throw new InvalidArgumentError("approximateSize() requires valid `start`, `end` and `callback`(for async) arguments")
+      throw new InvalidArgumentError "
+      approximateSize() requires valid `start`, `end` and `callback`(for async) arguments"
     if callback
       @approximateSizeAsync start, end, callback
     else
       @approximateSizeSync start, end
 
-  #should override this to test sync or if you do not wanna implement the _iterator function.
+  #should override this to test sync or if you do not wanna
+  #implement the _iterator function.
   IteratorClass: AbstractIterator
   iterator: (options) ->
     options = {}  unless typeof options is "object"
@@ -592,9 +597,10 @@ module.exports = class AbstractNoSQL
     if not obj?
       return new InvalidArgumentError(type + " cannot be `null` or `undefined`")
     if @_isBuffer(obj)
-      return new InvalidArgumentError(type + " cannot be an empty Buffer")  if obj.length is 0
-    else
-      return new InvalidArgumentError(type + " cannot be an empty String")  if String(obj) is ""
+      if obj.length is 0
+        return new InvalidArgumentError(type + " cannot be an empty Buffer")
+    else if String(obj) is ""
+      return new InvalidArgumentError(type + " cannot be an empty String")
 
   isOpen: ->
     !!@_opened

@@ -7,7 +7,7 @@ module.exports =  class FakeIterator
   getIndexGreaterThan = (arr, name)->
     i = -1
     while ++i < arr.length
-      return i if name <= arr[i] 
+      return i if name <= arr[i]
     return -1
   getIndexLessThan = (arr, name)->
     i = arr.length

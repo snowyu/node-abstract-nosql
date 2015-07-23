@@ -910,10 +910,8 @@
         if (obj.length === 0) {
           return new InvalidArgumentError(type + " cannot be an empty Buffer");
         }
-      } else {
-        if (String(obj) === "") {
-          return new InvalidArgumentError(type + " cannot be an empty String");
-        }
+      } else if (String(obj) === "") {
+        return new InvalidArgumentError(type + " cannot be an empty String");
       }
     };
 
