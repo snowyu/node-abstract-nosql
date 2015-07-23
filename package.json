@@ -40,12 +40,14 @@
     "abstract-object": "~2.1.5",
     "buffer-codec": "~1.6.2",
     "events-ex": "^1.1.2",
-    "inherits-ex": "^1.0.6",
+    "inherits-ex": "^1.1.0",
     "util-ex": "^0.2.8",
     "xtend": "~4.0.0"
   },
   "devDependencies": {
     "abstract-iterator": ">=0.10.0",
+    "coffee-coverage": "^0.6.2",
+    "istanbul": "^0.3.17",
     "pre-commit": "^1.0.4",
     "rimraf": "*",
     "sinon": "^1.12.2",
@@ -56,6 +58,7 @@
   },
   "scripts": {
     "test": "node_modules/.bin/tap ./test.js",
+    "test-cov": "npm run prepublish && istanbul cover ./test.js report text-summary lcovonly -x 'abstract/**'",
     "prepublish": "coffee -o . -c src/*.coffee"
   },
   "pre-commit": {
