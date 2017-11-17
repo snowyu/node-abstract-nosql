@@ -51,6 +51,8 @@ Now the following events added(before and after events):
 * del events: deleting, delete
 * batch events: batching, batch
 
+**NOTE:** the async callback will be executed after event.
+
 and you can choose which ones are added via this way:
 
 ```coffee
