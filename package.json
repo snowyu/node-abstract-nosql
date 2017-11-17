@@ -58,7 +58,7 @@
   },
   "scripts": {
     "test": "node_modules/.bin/tap ./test.js",
-    "test-cov": "npm run prepublish && istanbul cover ./test.js report text-summary lcovonly -x 'abstract/**'",
+    "test-cov": "tap ./test.js --coverage --coverage-report=lcovonly",
     "prepublish": "coffee -o . -c src/*.coffee"
   },
   "pre-commit": {
