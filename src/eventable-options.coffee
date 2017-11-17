@@ -104,8 +104,8 @@ module.exports = (aOptions)->
         @emit 'closing'
         inherited.call @, (err, result) =>
           return @dispatchError err, callback if err
-          @emit 'closed', result
           @emit 'close', result
+          @emit 'closed', result
           callback null, result if callback
       ).apply(@self)
     getBufferAsync: (key, destBuffer, options, callback) ->
