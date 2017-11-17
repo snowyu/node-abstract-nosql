@@ -46,12 +46,12 @@
   },
   "devDependencies": {
     "abstract-iterator": ">=0.10.0",
-    "coffee-coverage": "^0.6.2",
-    "istanbul": "^0.3.17",
-    "pre-commit": "^1.0.4",
+    "coffee-coverage": "^2.0.1",
+    "istanbul": "^0.4.5",
+    "pre-commit": "^1.2.2",
     "rimraf": "*",
-    "sinon": "^1.12.2",
-    "tap": "~0.4.13"
+    "sinon": "^4.1.2",
+    "tap": "~10.7.3"
   },
   "browser": {
     "rimraf": false

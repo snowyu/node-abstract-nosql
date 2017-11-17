@@ -4,6 +4,7 @@ var EVENT_DONE        = consts.DONE
 var EVENT_STOPPED     = consts.STOPPED
 var Errors            = require("../abstract-error")
 var HookedEventError  = Errors.HookedEventError
+const tap             = require('tap')
 
 
 module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
@@ -41,15 +42,18 @@ module.exports.openSync = function (NoSqlDatabase, test, testCommon) {
   })
 
   test('test database openSync ready event', function (t) {
+    var vIsReady = false
     var db = NoSqlDatabase(testCommon.location())
     db.once("ready", function(){
+      vIsReady = true
       t.ok(db.isOpen())
       t.ok(db.opened)
-      t.end()
     })
     db.open()
     t.ok(db.isOpen())
     t.ok(db.opened)
+    t.ok(vIsReady)
+    t.end()
   })
 }
 
@@ -59,13 +63,13 @@ module.exports.open = function (NoSqlDatabase, test, testCommon) {
     db.once("open", function(){
       t.ok(db.isOpen())
       t.ok(db.opened)
-      t.end()
     })
     db.open(function (err) {
         t.error(err)
         t.ok(db.isOpen())
         t.ok(db.opened)
-    })
+        t.end()
+      })
   })
 
   test('test database ready event', function (t) {
@@ -73,13 +77,13 @@ module.exports.open = function (NoSqlDatabase, test, testCommon) {
     db.once("ready", function(){
       t.ok(db.isOpen())
       t.ok(db.opened)
-      t.end()
     })
     db.open(function (err) {
         t.error(err)
         t.ok(db.isOpen())
         t.ok(db.opened)
-    })
+        t.end()
+      })
   })
 }
 
@@ -131,10 +135,10 @@ module.exports.put = function (test) {
       t.equal(key, 'putfoo1')
       t.equal(value, 'putbar1')
       t.ok(result, 'put ok')
-      t.end()
     })
     db.put('putfoo1', 'putbar1', function (err, result) {
       t.error(err)
+      t.end()
     })
   })
   test('test put event', function (t) {
@@ -143,10 +147,10 @@ module.exports.put = function (test) {
       t.equal(value, 'putbar12')
       t.ok(result, 'put ok')
       t.deepEqual(options, {}, 'no options')
-      t.end()
     })
     db.put('putfoo12', 'putbar12', function (err, result) {
       t.error(err)
+      t.end()
     })
   })
 }
@@ -288,13 +292,13 @@ module.exports.get = function (test) {
   test('test getting event', function (t) {
     db.once('getting', function(key, options){
       t.equal(key, 'foo')
-      t.end()
     })
     db.get('foo', function (err, result) {
       t.error(err)
       t.ok(typeof result === 'string', 'should be string by default')
 
       t.equal(result, 'bar')
+      t.end()
     })
   })
   test('test hooked getting event(EVENT_DONE)', function (t) {
@@ -337,13 +341,13 @@ module.exports.get = function (test) {
     db.once('get', function(key, value, options){
       t.equal(key, 'foo')
       t.equal(value, 'bar')
-      t.end()
     })
     db.get('foo', function (err, result) {
       t.error(err)
       t.ok(typeof result === 'string', 'should be string by default')
 
       t.equal(result, 'bar')
+      t.end()
     })
   })
 }
@@ -769,20 +773,20 @@ module.exports.batchSync = function (test) {
 }
 
 module.exports.close = function (NoSqlDatabase, test, testCommon) {
-  test('test database close event', function (t) {
-    var db = NoSqlDatabase(testCommon.location())
-    db.once("closed", function(){
-      t.notOk(db.isOpen())
-      t.notOk(db.opened)
-      t.end()
+  tap.only('test database close event', function (t) {
+    var vDb = NoSqlDatabase(testCommon.location())
+    vDb.once("closed", function(){
+      t.notOk(vDb.isOpen())
+      t.notOk(vDb.opened)
     })
-    db.open(function (err) {
+    vDb.open(function (err) {
         t.error(err)
-        t.ok(db.isOpen())
-        t.ok(db.opened)
-        db.close(function () {
-          t.notOk(db.isOpen())
-          t.notOk(db.opened)
+        t.ok(vDb.isOpen())
+        t.ok(vDb.opened)
+        vDb.close(function () {
+          t.notOk(vDb.isOpen())
+          t.notOk(vDb.opened)
+          t.end()
         })
     })
   })
