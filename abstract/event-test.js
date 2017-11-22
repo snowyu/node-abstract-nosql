@@ -4,7 +4,6 @@ var EVENT_DONE        = consts.DONE
 var EVENT_STOPPED     = consts.STOPPED
 var Errors            = require("../abstract-error")
 var HookedEventError  = Errors.HookedEventError
-const tap             = require('tap')
 
 
 module.exports.setUp = function (NoSqlDatabase, test, testCommon) {
@@ -42,8 +41,8 @@ module.exports.openSync = function (NoSqlDatabase, test, testCommon) {
   })
 
   test('test database openSync ready event', function (t) {
-    var vIsReady = false
     var db = NoSqlDatabase(testCommon.location())
+    var vIsReady = false
     db.once("ready", function(){
       vIsReady = true
       t.ok(db.isOpen())
@@ -773,22 +772,22 @@ module.exports.batchSync = function (test) {
 }
 
 module.exports.close = function (NoSqlDatabase, test, testCommon) {
-  tap.only('test database close event', function (t) {
-    var vDb = NoSqlDatabase(testCommon.location())
-    vDb.once("closed", function(){
-      t.notOk(vDb.isOpen())
-      t.notOk(vDb.opened)
+  test('test database close event', function (t) {
+    var db = NoSqlDatabase(testCommon.location())
+    db.once("closed", function(){
+      t.notOk(db.isOpen())
+      t.notOk(db.opened)
     })
-    vDb.open(function (err) {
+    db.open(function (err) {
         t.error(err)
-        t.ok(vDb.isOpen())
-        t.ok(vDb.opened)
-        vDb.close(function () {
-          t.notOk(vDb.isOpen())
-          t.notOk(vDb.opened)
+        t.ok(db.isOpen())
+        t.ok(db.opened)
+        db.close(function () {
+          t.notOk(db.isOpen())
+          t.notOk(db.opened)
           t.end()
         })
-    })
+      })
   })
 }
 
