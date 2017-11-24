@@ -48,18 +48,19 @@ module.exports = class AbstractChainedBatch
     @_clear() if typeof @_clear is "function"
     this
 
-  _write: (callback) ->
+  _write: (options, callback) ->
     that = this
     if @_writeSync
       setImmediate ->
         result = undefined
         try
-          result = that._writeSync()
+          result = that._writeSync(options)
         catch err
           callback err
           return
         callback null, result
-
+    else if typeof @_db._batch is "function"
+      @_db._batch(@_operations, options, callback)
     else
       setImmediate callback
 
@@ -79,9 +80,7 @@ module.exports = class AbstractChainedBatch
     unless typeof callback is "function"
       throw new InvalidArgumentError("write() requires a callback argument")
     @_written = true
-    return @_write(callback) if typeof @_write is "function"
-    if typeof @_db._batch is "function"
-      return @_db._batch(@_operations, options, callback)
+    return @_write(options, callback) if typeof @_write is "function"
     setImmediate callback
 
   write: (options, callback) ->

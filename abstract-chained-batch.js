@@ -76,7 +76,7 @@
       return this;
     };
 
-    AbstractChainedBatch.prototype._write = function(callback) {
+    AbstractChainedBatch.prototype._write = function(options, callback) {
       var that;
       that = this;
       if (this._writeSync) {
@@ -84,7 +84,7 @@
           var err, result;
           result = void 0;
           try {
-            result = that._writeSync();
+            result = that._writeSync(options);
           } catch (error) {
             err = error;
             callback(err);
@@ -92,6 +92,8 @@
           }
           return callback(null, result);
         });
+      } else if (typeof this._db._batch === "function") {
+        return this._db._batch(this._operations, options, callback);
       } else {
         return setImmediate(callback);
       }
@@ -122,10 +124,7 @@
       }
       this._written = true;
       if (typeof this._write === "function") {
-        return this._write(callback);
-      }
-      if (typeof this._db._batch === "function") {
-        return this._db._batch(this._operations, options, callback);
+        return this._write(options, callback);
       }
       return setImmediate(callback);
     };
