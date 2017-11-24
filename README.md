@@ -1,4 +1,4 @@
-### Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/node-abstract-nosql.png?branch=master)](http://travis-ci.org/snowyu/node-abstract-nosql)
+### Abstract NoSQL Database [![Build Status](https://secure.travis-ci.org/snowyu/abstract-nosql.png?branch=master)](http://travis-ci.org/snowyu/abstract-nosql)
 
 [![NPM](https://nodei.co/npm/abstract-nosql.png?downloads=true&downloadRank=true)](https://nodei.co/npm/abstract-nosql/)
 [![NPM](https://nodei.co/npm-dl/abstract-nosql.png?months=6&height=3)](https://nodei.co/npm/abstract-nosql/)
@@ -6,7 +6,7 @@
 
 Abstract-nosql package is modified from abstract-leveldown to enhance the synchronous methods supports for development a node nosql database quickly and using easily. And it make abstract-nosql modularization become possible.
 
-[abstract-nosql](https://github.com/snowyu/node-abstract-nosql) database can be extended its capabilities by adding different feature
+[abstract-nosql](https://github.com/snowyu/abstract-nosql) database can be extended its capabilities by adding different feature
 addin. and you(database developer) almost have nothing to do, can have these features. The database user can be free to decide whether to add this feature.
 
 * [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
