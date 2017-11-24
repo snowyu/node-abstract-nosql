@@ -18,7 +18,7 @@ function testDestBuffer(t, err, len, expected, offset) {
   t.error(err)
   t.equal(len, expected.length)
   if (typeof offset !== 'number') offset = 0
-  result = destBuffer.toString(null, offset, offset+expected.length)
+  result = destBuffer.toString(undefined, offset, offset+expected.length)
   t.equal(result, expected)
   destBuffer.fill(0, offset, offset+expected.length)
 }

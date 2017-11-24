@@ -90,9 +90,9 @@ module.exports.args = function (test) {
     t.end()
   })
 
-  test('test batch#write() with no callback', function (t) {
+  test('test batch#writeAsync() with no callback', function (t) {
     try {
-      db.batch().write()
+      db.batch().writeAsync()
     } catch (err) {
       t.equal(err.message, 'write() requires a callback argument', 'correct error message')
       return t.end()

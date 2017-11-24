@@ -76,16 +76,49 @@
       return this;
     };
 
-    AbstractChainedBatch.prototype.write = function(options, callback) {
+    AbstractChainedBatch.prototype._write = function(callback) {
+      var that;
+      that = this;
+      if (this._writeSync) {
+        return setImmediate(function() {
+          var err, result;
+          result = void 0;
+          try {
+            result = that._writeSync();
+          } catch (error) {
+            err = error;
+            callback(err);
+            return;
+          }
+          return callback(null, result);
+        });
+      } else {
+        return setImmediate(callback);
+      }
+    };
+
+    AbstractChainedBatch.prototype.writeSync = function(options) {
+      var result;
+      this._checkWritten();
+      this._written = true;
+      if (this._writeSync) {
+        result = this._writeSync(options);
+      } else if (typeof this._db._batchSync === "function") {
+        result = this._db._batchSync(this._operations, options);
+      }
+      return result;
+    };
+
+    AbstractChainedBatch.prototype.writeAsync = function(options, callback) {
       this._checkWritten();
       if (typeof options === "function") {
         callback = options;
       }
-      if (typeof callback !== "function") {
-        throw new InvalidArgumentError("write() requires a callback argument");
-      }
       if (typeof options !== "object") {
         options = {};
+      }
+      if (typeof callback !== "function") {
+        throw new InvalidArgumentError("write() requires a callback argument");
       }
       this._written = true;
       if (typeof this._write === "function") {
@@ -95,6 +128,20 @@
         return this._db._batch(this._operations, options, callback);
       }
       return setImmediate(callback);
+    };
+
+    AbstractChainedBatch.prototype.write = function(options, callback) {
+      if (typeof options === "function") {
+        callback = options;
+      }
+      if (typeof options !== "object") {
+        options = {};
+      }
+      if (typeof callback === "function") {
+        return this.writeAsync(options, callback);
+      } else {
+        return this.writeSync(options);
+      }
     };
 
     return AbstractChainedBatch;
