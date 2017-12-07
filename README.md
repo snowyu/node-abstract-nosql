@@ -9,7 +9,7 @@ Abstract-nosql package is modified from abstract-leveldown to enhance the synchr
 [abstract-nosql](https://github.com/snowyu/abstract-nosql) database can be extended its capabilities by adding different feature
 addin. and you(database developer) almost have nothing to do, can have these features. The database user can be free to decide whether to add this feature.
 
-* [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator).
+* [nosql-stream](https://github.com/snowyu/node-nosql-stream): streamable ability. you need implement the [AbstractIterator](https://github.com/snowyu/abstract-iterator).
 * [nosql-encoding](https://github.com/snowyu/node-nosql-encoding): key/value encoding ability.
 * [events-ex](https://github.com/snowyu/events-ex.js): hooked eventable ability.
 
@@ -119,7 +119,7 @@ mydb.get('stoppedKey');
 
 ## Streamable Ability
 
-Once implements the [AbstractIterator](https://github.com/snowyu/node-abstract-iterator):
+Once implements the [AbstractIterator](https://github.com/snowyu/abstract-iterator):
 
 * `AbstractIterator._nextSync()` or `AbstractIterator._next()`.
 * `AbstractIterator._endSync()` or `AbstractIterator._end()`.
@@ -508,7 +508,7 @@ See [nosql-memdb](https://github.com/snowyu/node-nosql-memdb/) if you are lookin
   * the value will be truncated if the destBuffer.length is less than value's.
   * return the byte size of value.
   * the will use the get/getSync to simulate if no `_getBuffer` implemented.
-- Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/node-abstract-iterator) package
+- Remove the AbstractIterator to [abstract-iterator](https://github.com/snowyu/abstract-iterator) package
 + Add the stream ability
   * You should install [nosql-stream](https://github.com/snowyu/node-nosql-stream) package first to use this feature.
 + Add the AbstractError and error code supports.
